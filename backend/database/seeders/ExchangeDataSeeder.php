@@ -43,12 +43,57 @@ class ExchangeDataSeeder extends Seeder
         Subscription::create(['user_id' => $admin->id, 'plan_id' => $basicPlan->id]);
         Subscription::create(['user_id' => $user->id, 'plan_id' => $basicPlan->id]);
 
-        // 3. Create Currencies (with countries)
-        $xaf = Currency::create(['code' => 'XAF', 'name' => 'Franc CFA (CEMAC)', 'symbol' => 'FCFA', 'country' => 'Afrique Centrale', 'is_active' => true]);
-        $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'country' => 'États-Unis', 'is_active' => true]);
-        $eur = Currency::create(['code' => 'EUR', 'name' => 'Euro', 'symbol' => '€', 'country' => 'Union Européenne', 'is_active' => true]);
-        $cad = Currency::create(['code' => 'CAD', 'name' => 'Canadian Dollar', 'symbol' => 'C$', 'country' => 'Canada', 'is_active' => true]);
-        $ngn = Currency::create(['code' => 'NGN', 'name' => 'Naira', 'symbol' => '₦', 'country' => 'Nigeria', 'is_active' => true]);
+        // 3. Create Currencies (32 major global and African currencies)
+        $currenciesData = [
+            ['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'country' => 'États-Unis'],
+            ['code' => 'EUR', 'name' => 'Euro', 'symbol' => '€', 'country' => 'Union Européenne'],
+            ['code' => 'GBP', 'name' => 'British Pound', 'symbol' => '£', 'country' => 'Royaume-Uni'],
+            ['code' => 'CAD', 'name' => 'Canadian Dollar', 'symbol' => 'C$', 'country' => 'Canada'],
+            ['code' => 'CHF', 'name' => 'Swiss Franc', 'symbol' => 'CHF', 'country' => 'Suisse'],
+            ['code' => 'JPY', 'name' => 'Japanese Yen', 'symbol' => '¥', 'country' => 'Japon'],
+            ['code' => 'CNY', 'name' => 'Chinese Yuan', 'symbol' => '元', 'country' => 'Chine'],
+            ['code' => 'AUD', 'name' => 'Australian Dollar', 'symbol' => 'A$', 'country' => 'Australie'],
+            ['code' => 'NZD', 'name' => 'New Zealand Dollar', 'symbol' => 'NZ$', 'country' => 'Nouvelle-Zélande'],
+            ['code' => 'INR', 'name' => 'Indian Rupee', 'symbol' => '₹', 'country' => 'Inde'],
+            ['code' => 'AED', 'name' => 'UAE Dirham', 'symbol' => 'AED', 'country' => 'Émirats Arabes Unis'],
+            ['code' => 'SAR', 'name' => 'Saudi Riyal', 'symbol' => 'SAR', 'country' => 'Arabie Saoudite'],
+            
+            // African Currencies
+            ['code' => 'XAF', 'name' => 'Franc CFA BEAC', 'symbol' => 'FCFA', 'country' => 'Afrique Centrale (CEMAC)'],
+            ['code' => 'XOF', 'name' => 'Franc CFA BCEAO', 'symbol' => 'FCFA', 'country' => 'Afrique de l\'Ouest (UEMOA)'],
+            ['code' => 'NGN', 'name' => 'Naira', 'symbol' => '₦', 'country' => 'Nigeria'],
+            ['code' => 'ZAR', 'name' => 'Rand', 'symbol' => 'R', 'country' => 'Afrique du Sud'],
+            ['code' => 'KES', 'name' => 'Shilling Kenyan', 'symbol' => 'KSh', 'country' => 'Kenya'],
+            ['code' => 'GHS', 'name' => 'Cedi', 'symbol' => 'GH₵', 'country' => 'Ghana'],
+            ['code' => 'EGP', 'name' => 'Egyptian Pound', 'symbol' => 'E£', 'country' => 'Égypte'],
+            ['code' => 'MAD', 'name' => 'Dirham Marocain', 'symbol' => 'MAD', 'country' => 'Maroc'],
+            ['code' => 'TND', 'name' => 'Dinar Tunisien', 'symbol' => 'DT', 'country' => 'Tunisie'],
+            ['code' => 'DZD', 'name' => 'Dinar Algérien', 'symbol' => 'DA', 'country' => 'Algérie'],
+            ['code' => 'UGX', 'name' => 'Shilling Ougandais', 'symbol' => 'USh', 'country' => 'Ouganda'],
+            ['code' => 'TZS', 'name' => 'Shilling Tanzanien', 'symbol' => 'TSh', 'country' => 'Tanzanie'],
+            ['code' => 'RWF', 'name' => 'Franc Rwandais', 'symbol' => 'RF', 'country' => 'Rwanda'],
+            ['code' => 'CDF', 'name' => 'Franc Congolais', 'symbol' => 'FC', 'country' => 'RDC'],
+            ['code' => 'ZMW', 'name' => 'Kwacha Zambien', 'symbol' => 'ZK', 'country' => 'Zambie'],
+            ['code' => 'MZN', 'name' => 'Metical', 'symbol' => 'MT', 'country' => 'Mozambique'],
+            ['code' => 'MUR', 'name' => 'Rupee Mauricienne', 'symbol' => '₨', 'country' => 'Maurice'],
+            ['code' => 'SCR', 'name' => 'Rupee Seychelloise', 'symbol' => 'SR', 'country' => 'Seychelles'],
+            ['code' => 'AOA', 'name' => 'Kwanza', 'symbol' => 'Kz', 'country' => 'Angola'],
+            ['code' => 'MAD', 'name' => 'Moroccan Dirham', 'symbol' => 'DH', 'country' => 'Maroc']
+        ];
+
+        $currencies = [];
+        foreach ($currenciesData as $c) {
+            // Avoid duplicate MAD entry (which was added twice by accident in raw list)
+            if (isset($currencies[$c['code']])) continue;
+            
+            $currencies[$c['code']] = Currency::create([
+                'code' => $c['code'],
+                'name' => $c['name'],
+                'symbol' => $c['symbol'],
+                'country' => $c['country'],
+                'is_active' => true
+            ]);
+        }
 
         // 4. Create Providers
         $remitly = Provider::create([
@@ -87,12 +132,13 @@ class ExchangeDataSeeder extends Seeder
             'is_active' => true
         ]);
 
-        // 5. Create Rates dynamically for all pairs
-        $currencies = [$xaf, $usd, $eur, $cad, $ngn];
         $providers = [$remitly, $wise, $western, $worldremit];
 
-        foreach ($currencies as $from) {
-            foreach ($currencies as $to) {
+        // 5. Create Rates dynamically for all pairs of these 31 active currencies
+        $currenciesList = array_values($currencies);
+
+        foreach ($currenciesList as $from) {
+            foreach ($currenciesList as $to) {
                 if ($from->id === $to->id) continue;
 
                 foreach ($providers as $provider) {
@@ -103,19 +149,19 @@ class ExchangeDataSeeder extends Seeder
                     if (str_contains($providerName, 'wise')) {
                         $feePercentage = 0.50; // 0.5% variable fee
                     } elseif (str_contains($providerName, 'remitly')) {
-                        $fixedFee = 1500.00; // in source currency
-                        if ($from->code === 'USD' || $from->code === 'EUR' || $from->code === 'CAD') {
-                            $fixedFee = 2.99;
+                        $fixedFee = 1500.00; // default for weak source currencies
+                        if ($from->code === 'USD' || $from->code === 'EUR' || $from->code === 'CAD' || $from->code === 'GBP' || $from->code === 'CHF') {
+                            $fixedFee = 2.99; // Lower fixed fee for strong source currencies
                         }
                     } elseif (str_contains($providerName, 'western')) {
                         $fixedFee = 2000.00;
-                        if ($from->code === 'USD' || $from->code === 'EUR' || $from->code === 'CAD') {
+                        if ($from->code === 'USD' || $from->code === 'EUR' || $from->code === 'CAD' || $from->code === 'GBP' || $from->code === 'CHF') {
                             $fixedFee = 4.99;
                         }
                         $feePercentage = 0.50;
                     } elseif (str_contains($providerName, 'worldremit')) {
                         $fixedFee = 1000.00;
-                        if ($from->code === 'USD' || $from->code === 'EUR' || $from->code === 'CAD') {
+                        if ($from->code === 'USD' || $from->code === 'EUR' || $from->code === 'CAD' || $from->code === 'GBP' || $from->code === 'CHF') {
                             $fixedFee = 1.99;
                         }
                         $feePercentage = 1.00;

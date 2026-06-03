@@ -8,41 +8,51 @@ use Illuminate\Support\Facades\Log;
 
 class ExchangeRateApiService
 {
-    protected $apiKey;
-    protected $baseUrl = 'https://v6.exchangerate-api.com/v6';
+    protected $baseUrl = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api';
 
     public function __construct()
     {
-        $this->apiKey = env('EXCHANGE_RATE_API_KEY', 'f0bd86c6248062029830b6b7');
+        // No API key needed for Fawaz Ahmed's API
     }
 
     /**
-     * Fetch latest rates from ExchangeRate-API and update local database.
+     * Fetch latest rates from Fawaz Ahmed's currency-api and update local database.
      */
     public function syncRates()
     {
         try {
-            $url = "{$this->baseUrl}/{$this->apiKey}/latest/USD";
+            $date = 'latest';
+            $apiVersion = 'v1';
+            $endpoint = 'currencies/usd.json';
+            $url = "{$this->baseUrl}@{$date}/{$apiVersion}/{$endpoint}";
+            
             $response = Http::withoutVerifying()->get($url);
 
-            if (!$response->successful() || $response->json('result') !== 'success') {
-                $errorMsg = $response->json('error-type') ?? 'API request failed';
-                Log::error("ExchangeRateAPI Sync Error: " . $errorMsg);
+            if (!$response->successful()) {
+                Log::error("Fawaz Ahmed Currency API Sync Error: API request failed");
                 return [
                     'success' => false,
-                    'message' => "ExchangeRate-API error: " . $errorMsg
+                    'message' => "Fawaz Ahmed Currency API request failed"
                 ];
             }
 
-            $ratesList = $response->json('conversion_rates'); // format: ["USD" => 1, "EUR" => 0.923, ...]
+            $ratesList = $response->json('usd'); // format: ["usd" => 1, "eur" => 0.860165, ...]
+
+            if (!$ratesList) {
+                Log::error("Fawaz Ahmed Currency API Sync Error: rates object for 'usd' not found in response");
+                return [
+                    'success' => false,
+                    'message' => "Rates list could not be parsed"
+                ];
+            }
 
             // Fetch all rates to update
             $rates = ExchangeRate::with(['currencyFrom', 'currencyTo', 'provider'])->get();
             $updatedCount = 0;
 
             foreach ($rates as $rate) {
-                $fromCode = $rate->currencyFrom->code;
-                $toCode = $rate->currencyTo->code;
+                $fromCode = strtolower($rate->currencyFrom->code);
+                $toCode = strtolower($rate->currencyTo->code);
 
                 if (isset($ratesList[$fromCode]) && isset($ratesList[$toCode])) {
                     $usdToFrom = floatval($ratesList[$fromCode]);

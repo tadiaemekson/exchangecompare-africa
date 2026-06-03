@@ -44,7 +44,7 @@ class ExchangeDataSeeder extends Seeder
         Subscription::create(['user_id' => $user->id, 'plan_id' => $basicPlan->id]);
 
         // 3. Create Currencies (with countries)
-        $xaf = Currency::create(['code' => 'XAF', 'name' => 'Franc CFA (CEMAC)', 'symbol' => 'FCFA', 'country' => 'Cameroun / Afrique Centrale', 'is_active' => true]);
+        $xaf = Currency::create(['code' => 'XAF', 'name' => 'Franc CFA (CEMAC)', 'symbol' => 'FCFA', 'country' => 'Afrique Centrale', 'is_active' => true]);
         $usd = Currency::create(['code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'country' => 'États-Unis', 'is_active' => true]);
         $eur = Currency::create(['code' => 'EUR', 'name' => 'Euro', 'symbol' => '€', 'country' => 'Union Européenne', 'is_active' => true]);
         $cad = Currency::create(['code' => 'CAD', 'name' => 'Canadian Dollar', 'symbol' => 'C$', 'country' => 'Canada', 'is_active' => true]);
@@ -87,95 +87,51 @@ class ExchangeDataSeeder extends Seeder
             'is_active' => true
         ]);
 
-        // 5. Create Rates
-        // Rates from XAF to USD
-        ExchangeRate::create([
-            'provider_id' => $remitly->id,
-            'from_currency_id' => $xaf->id,
-            'to_currency_id' => $usd->id,
-            'buy_rate' => 0.001650,
-            'sell_rate' => 0.001680,
-            'fee_percentage' => 0.00,
-            'fixed_fee' => 1200.00 // Fixed fee in XAF (2$)
-        ]);
-        
-        ExchangeRate::create([
-            'provider_id' => $wise->id,
-            'from_currency_id' => $xaf->id,
-            'to_currency_id' => $usd->id,
-            'buy_rate' => 0.001670,
-            'sell_rate' => 0.001690,
-            'fee_percentage' => 1.50, // 1.5% fee
-            'fixed_fee' => 0.00
-        ]);
-        
-        ExchangeRate::create([
-            'provider_id' => $western->id,
-            'from_currency_id' => $xaf->id,
-            'to_currency_id' => $usd->id,
-            'buy_rate' => 0.001550,
-            'sell_rate' => 0.001600,
-            'fee_percentage' => 0.50,
-            'fixed_fee' => 3000.00 // High fixed fee in XAF
-        ]);
+        // 5. Create Rates dynamically for all pairs
+        $currencies = [$xaf, $usd, $eur, $cad, $ngn];
+        $providers = [$remitly, $wise, $western, $worldremit];
 
-        ExchangeRate::create([
-            'provider_id' => $worldremit->id,
-            'from_currency_id' => $xaf->id,
-            'to_currency_id' => $usd->id,
-            'buy_rate' => 0.001620,
-            'sell_rate' => 0.001660,
-            'fee_percentage' => 1.00,
-            'fixed_fee' => 900.00
-        ]);
+        foreach ($currencies as $from) {
+            foreach ($currencies as $to) {
+                if ($from->id === $to->id) continue;
 
-        // Rates from XAF to EUR
-        ExchangeRate::create([
-            'provider_id' => $remitly->id,
-            'from_currency_id' => $xaf->id,
-            'to_currency_id' => $eur->id,
-            'buy_rate' => 0.001520,
-            'sell_rate' => 0.001550,
-            'fee_percentage' => 0.00,
-            'fixed_fee' => 1000.00
-        ]);
-        ExchangeRate::create([
-            'provider_id' => $wise->id,
-            'from_currency_id' => $xaf->id,
-            'to_currency_id' => $eur->id,
-            'buy_rate' => 0.001524,
-            'sell_rate' => 0.001538,
-            'fee_percentage' => 1.20,
-            'fixed_fee' => 0.00
-        ]);
-        ExchangeRate::create([
-            'provider_id' => $western->id,
-            'from_currency_id' => $xaf->id,
-            'to_currency_id' => $eur->id,
-            'buy_rate' => 0.001480,
-            'sell_rate' => 0.001510,
-            'fee_percentage' => 0.80,
-            'fixed_fee' => 2500.00
-        ]);
+                foreach ($providers as $provider) {
+                    $feePercentage = 0.00;
+                    $fixedFee = 0.00;
 
-        // USD to NGN
-        ExchangeRate::create([
-            'provider_id' => $wise->id,
-            'from_currency_id' => $usd->id,
-            'to_currency_id' => $ngn->id,
-            'buy_rate' => 1450.000000,
-            'sell_rate' => 1480.000000,
-            'fee_percentage' => 0.80,
-            'fixed_fee' => 2.00
-        ]);
-        ExchangeRate::create([
-            'provider_id' => $remitly->id,
-            'from_currency_id' => $usd->id,
-            'to_currency_id' => $ngn->id,
-            'buy_rate' => 1430.000000,
-            'sell_rate' => 1460.000000,
-            'fee_percentage' => 0.00,
-            'fixed_fee' => 3.99
-        ]);
+                    $providerName = strtolower($provider->name);
+                    if (str_contains($providerName, 'wise')) {
+                        $feePercentage = 0.50; // 0.5% variable fee
+                    } elseif (str_contains($providerName, 'remitly')) {
+                        $fixedFee = 1500.00; // in source currency
+                        if ($from->code === 'USD' || $from->code === 'EUR' || $from->code === 'CAD') {
+                            $fixedFee = 2.99;
+                        }
+                    } elseif (str_contains($providerName, 'western')) {
+                        $fixedFee = 2000.00;
+                        if ($from->code === 'USD' || $from->code === 'EUR' || $from->code === 'CAD') {
+                            $fixedFee = 4.99;
+                        }
+                        $feePercentage = 0.50;
+                    } elseif (str_contains($providerName, 'worldremit')) {
+                        $fixedFee = 1000.00;
+                        if ($from->code === 'USD' || $from->code === 'EUR' || $from->code === 'CAD') {
+                            $fixedFee = 1.99;
+                        }
+                        $feePercentage = 1.00;
+                    }
+
+                    ExchangeRate::create([
+                        'provider_id' => $provider->id,
+                        'from_currency_id' => $from->id,
+                        'to_currency_id' => $to->id,
+                        'buy_rate' => 1.00, // Will be updated by RatesSync
+                        'sell_rate' => 1.00,
+                        'fee_percentage' => $feePercentage,
+                        'fixed_fee' => $fixedFee,
+                    ]);
+                }
+            }
+        }
     }
 }

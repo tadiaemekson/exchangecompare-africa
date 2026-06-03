@@ -1,0 +1,3 @@
+# Database Schema
+
+users, currencies, providers, exchange_rates, alerts...

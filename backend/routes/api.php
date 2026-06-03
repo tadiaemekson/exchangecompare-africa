@@ -19,6 +19,7 @@ Route::get('/currencies', [CurrencyController::class, 'index']);
 Route::get('/providers', [ProviderController::class, 'index']);
 Route::get('/rates', [ExchangeRateController::class, 'index']);
 Route::get('/compare', [ExchangeRateController::class, 'compare']);
+Route::post('/conversions', [ConversionController::class, 'store']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -35,7 +36,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Conversions routes
     Route::get('/conversions', [ConversionController::class, 'index']);
-    Route::post('/conversions', [ConversionController::class, 'store']);
 
     // Subscriptions routes
     Route::get('/plans', [SubscriptionController::class, 'getPlans']);
@@ -49,6 +49,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin routes
     Route::middleware('admin')->group(function () {
+        // Stats
+        Route::get('/admin/users-count', function () {
+            return response()->json(['count' => \App\Models\User::count()]);
+        });
+
         // Providers CRUD
         Route::post('/providers', [ProviderController::class, 'store']);
         Route::put('/providers/{id}', [ProviderController::class, 'update']);

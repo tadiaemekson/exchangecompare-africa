@@ -17,17 +17,24 @@ class ExchangeRateController extends Controller
         
         if ($request->has('currency_from')) {
             $query->whereHas('currencyFrom', function($q) use ($request) {
-                $q->where('code', $request->currency_from);
+                $q->where('code', strtoupper($request->currency_from));
             });
         }
         
         if ($request->has('currency_to')) {
             $query->whereHas('currencyTo', function($q) use ($request) {
-                $q->where('code', $request->currency_to);
+                $q->where('code', strtoupper($request->currency_to));
             });
         }
+
+        if ($request->has('provider_id')) {
+            $query->where('provider_id', $request->provider_id);
+        }
         
-        return response()->json($query->get());
+        $perPage = $request->get('per_page', 50);
+        $paginated = $query->orderBy('id', 'desc')->paginate($perPage);
+        
+        return response()->json($paginated);
     }
 
     /**

@@ -42,16 +42,20 @@ class ConversionController extends Controller
             'to_currency_id' => 'required|exists:currencies,id',
             'converted_amount' => 'required|numeric',
             'rate' => 'required|numeric',
+            'beneficiary_details' => 'nullable|array',
         ]);
 
+        $user = auth('sanctum')->user();
+
         $conversion = Conversion::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user ? $user->id : null,
             'amount' => $request->amount,
             'best_provider_id' => $request->best_provider_id,
             'from_currency_id' => $request->from_currency_id,
             'to_currency_id' => $request->to_currency_id,
             'converted_amount' => $request->converted_amount,
             'rate' => $request->rate,
+            'beneficiary_details' => $request->beneficiary_details,
         ]);
 
         return response()->json($conversion->load(['provider', 'currencyFrom', 'currencyTo']), 201);

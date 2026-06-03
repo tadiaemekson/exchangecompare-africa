@@ -26,6 +26,7 @@ class ProviderController extends Controller
             'website' => 'nullable|url',
             'rating' => 'nullable|numeric|min:0|max:5',
             'status' => 'nullable|string',
+            'type' => 'nullable|string|in:fintech,bank,crypto,agent',
             'logo_url' => 'nullable|url',
             'is_active' => 'nullable|boolean',
         ]);
@@ -47,6 +48,7 @@ class ProviderController extends Controller
             'website' => 'nullable|url',
             'rating' => 'nullable|numeric|min:0|max:5',
             'status' => 'nullable|string',
+            'type' => 'nullable|string|in:fintech,bank,crypto,agent',
             'logo_url' => 'nullable|url',
             'is_active' => 'nullable|boolean',
         ]);

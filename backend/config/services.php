@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'currency_api' => [
+        'base_url' => env('CURRENCY_API_BASE_URL', 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api'),
+        'date' => env('CURRENCY_API_DATE', 'latest'),
+        'api_version' => env('CURRENCY_API_VERSION', 'v1'),
+        'endpoint' => env('CURRENCY_API_ENDPOINT', 'currencies/usd.json'),
+        'fallback_url' => env('CURRENCY_API_FALLBACK_URL', 'https://{date}.currency-api.pages.dev/{apiVersion}/{endpoint}'),
+    ],
+
 ];

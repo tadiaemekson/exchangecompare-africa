@@ -13,13 +13,15 @@ class Conversion extends Model
         'from_currency_id', 
         'to_currency_id', 
         'converted_amount', 
-        'rate'
+        'rate',
+        'beneficiary_details'
     ];
 
     protected $casts = [
         'amount' => 'float',
         'converted_amount' => 'float',
         'rate' => 'float',
+        'beneficiary_details' => 'array',
     ];
 
     public function user()

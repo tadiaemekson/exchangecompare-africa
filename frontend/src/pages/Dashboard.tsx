@@ -52,6 +52,115 @@ interface Currency {
   code: string;
 }
 
+const translations = {
+  fr: {
+    backToComparator: "Retour au comparateur",
+    userDashboard: "Dashboard Utilisateur",
+    myPlan: "Mon Plan:",
+    saasSubscriptions: "Abonnements SaaS MVP",
+    active: "ACTIF",
+    perMonth: "/ mois",
+    unlimitedComparisons: "Comparaisons de devises illimitées",
+    alertsLimit3: "Jusqu'à 3 alertes actives",
+    alertsLimit15: "Jusqu'à 15 alertes actives",
+    alertsLimitUnlimited: "Alertes actives illimitées",
+    standardUpdate: "Mise à jour standard (1h)",
+    instantUpdate: "Mise à jour instantanée en temps réel",
+    currentPlan: "Plan Actuel",
+    subscribe: "S'abonner",
+    newAlert: "Nouvelle Alerte",
+    currencyPair: "Paire de devises",
+    triggerCondition: "Condition de déclenchement",
+    aboveOrEqual: "Est supérieur ou égal à (≥)",
+    belowOrEqual: "Est inférieur ou égal à (≤)",
+    targetRate: "Taux Cible",
+    targetRatePlaceholder: "Ex: 0.00165",
+    createAlertBtn: "Créer l'alerte",
+    myConfiguredAlerts: "Mes alertes configurées",
+    noActiveAlerts: "Aucune alerte active configurée.",
+    tableCurrencyPair: "Paire de devises",
+    tableCondition: "Condition",
+    tableTargetRate: "Taux cible",
+    tableStatus: "Statut",
+    tableDelete: "Supprimer",
+    condAbove: "≥ Supérieur ou égal",
+    condBelow: "≤ Inférieur ou égal",
+    statusActive: "Active",
+    statusTriggered: "Déclenchée",
+    transferHistory: "Historique de mes transferts",
+    noTransfers: "Aucun transfert enregistré.",
+    tableProvider: "Fournisseur",
+    tableSentAmount: "Montant envoyé",
+    tableAppliedRate: "Taux appliqué",
+    tableConvertedAmount: "Montant converti",
+    tableTransferDate: "Date du transfert",
+    
+    // Toasts
+    alertCreated: "Alerte créée",
+    alertCreatedDesc: "Vous serez notifié par email.",
+    error: "Erreur",
+    alertCreateFail: "Impossible de créer l'alerte.",
+    alertDeleted: "Alerte supprimée",
+    alertDeleteFail: "Échec de la suppression.",
+    subUpdated: "Abonnement mis à jour !",
+    subUpdatedDesc: "Vous êtes maintenant abonné au plan ",
+    subUpdateFail: "Échec de la mise à jour de l'abonnement."
+  },
+  en: {
+    backToComparator: "Back to comparator",
+    userDashboard: "User Dashboard",
+    myPlan: "My Plan:",
+    saasSubscriptions: "SaaS MVP Subscriptions",
+    active: "ACTIVE",
+    perMonth: "/ month",
+    unlimitedComparisons: "Unlimited currency comparisons",
+    alertsLimit3: "Up to 3 active alerts",
+    alertsLimit15: "Up to 15 active alerts",
+    alertsLimitUnlimited: "Unlimited active alerts",
+    standardUpdate: "Standard update (1h)",
+    instantUpdate: "Instant real-time update",
+    currentPlan: "Current Plan",
+    subscribe: "Subscribe",
+    newAlert: "New Alert",
+    currencyPair: "Currency Pair",
+    triggerCondition: "Trigger Condition",
+    aboveOrEqual: "Is greater than or equal to (≥)",
+    belowOrEqual: "Is less than or equal to (≤)",
+    targetRate: "Target Rate",
+    targetRatePlaceholder: "E.g., 0.00165",
+    createAlertBtn: "Create alert",
+    myConfiguredAlerts: "My configured alerts",
+    noActiveAlerts: "No active alerts configured.",
+    tableCurrencyPair: "Currency Pair",
+    tableCondition: "Condition",
+    tableTargetRate: "Target Rate",
+    tableStatus: "Status",
+    tableDelete: "Delete",
+    condAbove: "≥ Greater or equal",
+    condBelow: "≤ Less or equal",
+    statusActive: "Active",
+    statusTriggered: "Triggered",
+    transferHistory: "My transfer history",
+    noTransfers: "No transfers recorded.",
+    tableProvider: "Provider",
+    tableSentAmount: "Sent Amount",
+    tableAppliedRate: "Applied Rate",
+    tableConvertedAmount: "Converted Amount",
+    tableTransferDate: "Transfer Date",
+    
+    // Toasts
+    alertCreated: "Alert created",
+    alertCreatedDesc: "You will be notified by email.",
+    error: "Error",
+    alertCreateFail: "Unable to create the alert.",
+    alertDeleted: "Alert deleted",
+    alertDeleteFail: "Failed to delete.",
+    subUpdated: "Subscription updated!",
+    subUpdatedDesc: "You are now subscribed to the plan ",
+    subUpdateFail: "Failed to update subscription."
+  }
+};
+
 export default function Dashboard() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -65,10 +174,22 @@ export default function Dashboard() {
   const [targetRate, setTargetRate] = useState('');
   const [condition, setCondition] = useState('above');
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState<'fr' | 'en'>('fr');
 
   useEffect(() => {
+    const savedLang = localStorage.getItem('lang');
+    if (savedLang === 'fr' || savedLang === 'en') {
+      setLang(savedLang);
+    }
     fetchData();
   }, []);
+
+  const changeLanguage = (newLang: 'fr' | 'en') => {
+    setLang(newLang);
+    localStorage.setItem('lang', newLang);
+  };
+
+  const t = translations[lang];
 
   const fetchData = async () => {
     try {
@@ -104,21 +225,21 @@ export default function Dashboard() {
         target_rate: targetRate,
         condition
       });
-      toast.success('Alerte créée', { description: 'Vous serez notifié par email.' });
+      toast.success(t.alertCreated, { description: t.alertCreatedDesc });
       setTargetRate('');
       fetchData();
     } catch (err) {
-      toast.error('Erreur', { description: "Impossible de créer l'alerte." });
+      toast.error(t.error, { description: t.alertCreateFail });
     }
   };
 
   const handleDeleteAlert = async (id: number) => {
     try {
       await api.delete(`/alerts/${id}`);
-      toast.success('Alerte supprimée');
+      toast.success(t.alertDeleted);
       fetchData();
     } catch (err) {
-      toast.error('Erreur', { description: 'Échec de la suppression.' });
+      toast.error(t.error, { description: t.alertDeleteFail });
     }
   };
 
@@ -127,10 +248,10 @@ export default function Dashboard() {
     try {
       const res = await api.post('/subscribe', { plan_id: planId });
       setSubscription(res.data);
-      toast.success('Abonnement mis à jour !', { description: `Vous êtes maintenant abonné au plan ${res.data.plan.name}` });
+      toast.success(t.subUpdated, { description: `${t.subUpdatedDesc}${res.data.plan.name}` });
       setLoading(false);
     } catch (err) {
-      toast.error("Échec de la mise à jour de l'abonnement.");
+      toast.error(t.subUpdateFail);
       setLoading(false);
     }
   };
@@ -143,20 +264,41 @@ export default function Dashboard() {
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors text-sm font-medium">
             <ArrowLeft className="w-4 h-4" />
-            Retour au comparateur
+            {t.backToComparator}
           </Link>
           <div className="flex items-center gap-2">
             <LayoutDashboard className="w-5 h-5 text-[#2563EB]" />
-            <span className="font-extrabold text-base tracking-tight font-display">Dashboard Utilisateur</span>
+            <span className="font-extrabold text-base tracking-tight font-display">{t.userDashboard}</span>
           </div>
-          {subscription && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mon Plan:</span>
-              <span className="text-xs font-extrabold bg-[#2563EB]/10 text-[#2563EB] dark:bg-[#2563EB]/20 dark:text-blue-400 px-3 py-1 rounded-full border border-blue-200/20">
-                {subscription.plan.name}
-              </span>
+          
+          <div className="flex items-center gap-4">
+            {/* Language switcher toggle */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200/50 dark:border-slate-700/50">
+              <button
+                type="button"
+                onClick={() => changeLanguage('fr')}
+                className={`text-[10px] px-2 py-1 rounded font-bold uppercase transition-all ${lang === 'fr' ? 'bg-white dark:bg-slate-900 text-[#2563EB] shadow-xs' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
+              >
+                FR
+              </button>
+              <button
+                type="button"
+                onClick={() => changeLanguage('en')}
+                className={`text-[10px] px-2 py-1 rounded font-bold uppercase transition-all ${lang === 'en' ? 'bg-white dark:bg-slate-900 text-[#2563EB] shadow-xs' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
+              >
+                EN
+              </button>
             </div>
-          )}
+
+            {subscription && (
+              <div className="flex items-center gap-1.5 border-l pl-4 border-slate-200 dark:border-slate-800">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t.myPlan}</span>
+                <span className="text-xs font-extrabold bg-[#2563EB]/10 text-[#2563EB] dark:bg-[#2563EB]/20 dark:text-blue-400 px-3 py-1 rounded-full border border-blue-200/20">
+                  {subscription.plan.name}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -167,7 +309,7 @@ export default function Dashboard() {
         <section className="space-y-4">
           <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white font-display">
             <CreditCard className="text-[#2563EB]" />
-            Abonnements SaaS MVP
+            {t.saasSubscriptions}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {plans.map((plan) => {
@@ -180,26 +322,26 @@ export default function Dashboard() {
                 }`}>
                   {isActive && (
                     <div className="absolute top-0 right-0 bg-[#2563EB] text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg">
-                      ACTIF
+                      {t.active}
                     </div>
                   )}
                   <CardHeader className="pb-4">
                     <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">{plan.name}</CardTitle>
                     <div className="mt-2 flex items-baseline">
                       <span className="text-3xl font-black text-slate-900 dark:text-white">{plan.price.toFixed(2)} $</span>
-                      <span className="text-slate-400 text-xs ml-1">/ mois</span>
+                      <span className="text-slate-400 text-xs ml-1">{t.perMonth}</span>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <ul className="text-xs text-slate-500 space-y-2">
-                      <li className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-[#10B981]" /> Comparaisons de devises illimitées</li>
+                      <li className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-[#10B981]" /> {t.unlimitedComparisons}</li>
                       <li className="flex items-center gap-1.5">
                         <Check className="w-3.5 h-3.5 text-[#10B981]" />{' '}
-                        {plan.price === 0 ? 'Jusqu\'à 3 alertes actives' : plan.price < 20 ? 'Jusqu\'à 15 alertes actives' : 'Alertes actives illimitées'}
+                        {plan.price === 0 ? t.alertsLimit3 : plan.price < 20 ? t.alertsLimit15 : t.alertsLimitUnlimited}
                       </li>
                       <li className="flex items-center gap-1.5">
                         <Check className="w-3.5 h-3.5 text-[#10B981]" />{' '}
-                        {plan.price === 0 ? 'Mise à jour standard (1h)' : 'Mise à jour instantanée en temps réel'}
+                        {plan.price === 0 ? t.standardUpdate : t.instantUpdate}
                       </li>
                     </ul>
                     <Button 
@@ -211,7 +353,7 @@ export default function Dashboard() {
                           : 'bg-[#2563EB] hover:bg-[#2563EB]/90 text-white'
                       }`}
                     >
-                      {isActive ? 'Plan Actuel' : 'S\'abonner'}
+                      {isActive ? t.currentPlan : t.subscribe}
                     </Button>
                   </CardContent>
                 </Card>
@@ -227,12 +369,12 @@ export default function Dashboard() {
           <div className="lg:col-span-1 space-y-4">
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white font-display">
               <Bell className="text-[#F59E0B]" />
-              Nouvelle Alerte
+              {t.newAlert}
             </h2>
             <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 rounded-xl">
               <form onSubmit={handleAddAlert} className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold">Paire de devises</Label>
+                  <Label className="text-xs font-semibold">{t.currencyPair}</Label>
                   <div className="flex items-center gap-2">
                     <select 
                       value={currencyFrom} 
@@ -253,32 +395,32 @@ export default function Dashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold">Condition de déclenchement</Label>
+                  <Label className="text-xs font-semibold">{t.triggerCondition}</Label>
                   <select 
                     value={condition} 
                     onChange={(e) => setCondition(e.target.value)}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-[#0F172A] dark:text-white font-medium"
                   >
-                    <option value="above">Est supérieur ou égal à (≥)</option>
-                    <option value="below">Est inférieur ou égal à (≤)</option>
+                    <option value="above">{t.aboveOrEqual}</option>
+                    <option value="below">{t.belowOrEqual}</option>
                   </select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold">Taux Cible</Label>
+                  <Label className="text-xs font-semibold">{t.targetRate}</Label>
                   <Input 
                     type="number" 
                     step="0.000001"
                     value={targetRate} 
                     onChange={(e) => setTargetRate(e.target.value)} 
-                    placeholder="Ex: 0.00165"
+                    placeholder={t.targetRatePlaceholder}
                     className="h-10"
                     required
                   />
                 </div>
 
                 <Button type="submit" className="w-full bg-[#2563EB] hover:bg-[#2563EB]/90 text-white font-bold h-10 gap-2">
-                  <Plus className="w-4 h-4" /> Créer l'alerte
+                  <Plus className="w-4 h-4" /> {t.createAlertBtn}
                 </Button>
               </form>
             </Card>
@@ -288,20 +430,20 @@ export default function Dashboard() {
           <div className="lg:col-span-2 space-y-4">
             <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white font-display">
               <Bell className="text-[#2563EB]" />
-              Mes alertes configurées ({alerts.length})
+              {t.myConfiguredAlerts} ({alerts.length})
             </h2>
             <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 rounded-xl">
               {alerts.length === 0 ? (
-                <p className="text-slate-400 text-center py-12 text-sm">Aucune alerte active configurée.</p>
+                <p className="text-slate-400 text-center py-12 text-sm">{t.noActiveAlerts}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Paire de devises</TableHead>
-                      <TableHead>Condition</TableHead>
-                      <TableHead>Taux cible</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Supprimer</TableHead>
+                      <TableHead>{t.tableCurrencyPair}</TableHead>
+                      <TableHead>{t.tableCondition}</TableHead>
+                      <TableHead>{t.tableTargetRate}</TableHead>
+                      <TableHead>{t.tableStatus}</TableHead>
+                      <TableHead className="text-right">{t.tableDelete}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -314,14 +456,14 @@ export default function Dashboard() {
                             {from} → {to}
                           </TableCell>
                           <TableCell className="text-xs">
-                            {alert.condition === 'above' ? '≥ Supérieur ou égal' : '≤ Inférieur ou égal'}
+                            {alert.condition === 'above' ? t.condAbove : t.condBelow}
                           </TableCell>
                           <TableCell className="font-bold text-[#2563EB]">{alert.target_rate}</TableCell>
                           <TableCell>
                             {alert.is_active ? (
-                              <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200/50">Active</span>
+                              <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200/50">{t.statusActive}</span>
                             ) : (
-                              <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200/50">Déclenchée</span>
+                              <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200/50">{t.statusTriggered}</span>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
@@ -344,20 +486,20 @@ export default function Dashboard() {
         <section className="space-y-4">
           <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white font-display">
             <History className="text-[#10B981]" />
-            Historique de mes transferts ({conversions.length})
+            {t.transferHistory} ({conversions.length})
           </h2>
           <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 rounded-xl">
             {conversions.length === 0 ? (
-              <p className="text-slate-400 text-center py-12 text-sm">Aucun transfert enregistré.</p>
+              <p className="text-slate-400 text-center py-12 text-sm">{t.noTransfers}</p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Fournisseur</TableHead>
-                    <TableHead>Montant envoyé</TableHead>
-                    <TableHead>Taux appliqué</TableHead>
-                    <TableHead>Montant converti</TableHead>
-                    <TableHead>Date du transfert</TableHead>
+                    <TableHead>{t.tableProvider}</TableHead>
+                    <TableHead>{t.tableSentAmount}</TableHead>
+                    <TableHead>{t.tableAppliedRate}</TableHead>
+                    <TableHead>{t.tableConvertedAmount}</TableHead>
+                    <TableHead>{t.tableTransferDate}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -369,7 +511,7 @@ export default function Dashboard() {
                         <TableCell className="font-bold text-slate-900 dark:text-white">
                           {conv.provider.name}
                         </TableCell>
-                        <TableCell className="font-medium text-slate-700 dark:text-slate-300">
+                        <TableCell className="font-medium text-slate-700 dark:text-slate-350">
                           {conv.amount.toLocaleString()} {from}
                         </TableCell>
                         <TableCell className="text-slate-500">{conv.rate}</TableCell>

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Provider extends Model
 {
-    protected $fillable = ['name', 'website', 'rating', 'status', 'logo_url', 'is_active'];
+    protected $fillable = ['name', 'website', 'rating', 'status', 'type', 'logo_url', 'is_active'];
 
     protected $casts = [
         'is_active' => 'boolean',

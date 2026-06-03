@@ -205,7 +205,17 @@ class ExchangeDataSeeder extends Seeder
             'is_active' => true
         ]);
 
-        $providers = [$remitly, $wise, $western, $worldremit, $ecobank, $socgen, $afriland, $uba, $binance, $coinbase];
+        $expressLink = Provider::create([
+            'name' => 'Express Link Direct',
+            'website' => 'https://chat.whatsapp.com/ExpressLinkDirectCEMAC',
+            'rating' => 4.60,
+            'status' => 'active',
+            'type' => 'agent',
+            'logo_url' => 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=120&q=80',
+            'is_active' => true
+        ]);
+
+        $providers = [$remitly, $wise, $western, $worldremit, $ecobank, $socgen, $afriland, $uba, $binance, $coinbase, $expressLink];
 
         // 5. Create Rates dynamically for all pairs of active currencies
         $currenciesList = array_values($currencies);
@@ -272,6 +282,12 @@ class ExchangeDataSeeder extends Seeder
                         $feePercentage = 0.10; // Binance has a low trading fee of 0.1%
                     } elseif (str_contains($providerName, 'coinbase')) {
                         $feePercentage = 0.50; // Coinbase has a slightly higher fee of 0.5%
+                    } elseif (str_contains($providerName, 'express link') || $provider->type === 'agent') {
+                        $fixedFee = 1000.00;
+                        if ($from->code === 'USD' || $from->code === 'EUR') {
+                            $fixedFee = 1.99;
+                        }
+                        $feePercentage = 2.00;
                     }
 
                     ExchangeRate::create([

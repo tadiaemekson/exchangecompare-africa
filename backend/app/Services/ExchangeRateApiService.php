@@ -8,41 +8,70 @@ use Illuminate\Support\Facades\Log;
 
 class ExchangeRateApiService
 {
-    protected $baseUrl = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api';
+    protected $baseUrl;
+    protected $defaultDate;
+    protected $defaultApiVersion;
+    protected $defaultEndpoint;
+    protected $fallbackUrlTemplate;
 
     public function __construct()
     {
-        // No API key needed for Fawaz Ahmed's API
+        $this->baseUrl = config('services.currency_api.base_url', 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api');
+        $this->defaultDate = config('services.currency_api.date', 'latest');
+        $this->defaultApiVersion = config('services.currency_api.api_version', 'v1');
+        $this->defaultEndpoint = config('services.currency_api.endpoint', 'currencies/usd.json');
+        $this->fallbackUrlTemplate = config('services.currency_api.fallback_url', 'https://{date}.currency-api.pages.dev/{apiVersion}/{endpoint}');
     }
 
     /**
      * Fetch latest rates from Fawaz Ahmed's currency-api and update local database.
      */
-    public function syncRates()
+    public function syncRates($date = null, $apiVersion = null, $endpoint = null)
     {
         try {
-            $date = 'latest';
-            $apiVersion = 'v1';
-            $endpoint = 'currencies/usd.json';
-            $url = "{$this->baseUrl}@{$date}/{$apiVersion}/{$endpoint}";
+            $date = $date ?? $this->defaultDate;
+            $apiVersion = $apiVersion ?? $this->defaultApiVersion;
+            $endpoint = $endpoint ?? $this->defaultEndpoint;
+
+            $primaryUrl = "{$this->baseUrl}@{$date}/{$apiVersion}/{$endpoint}";
             
-            $response = Http::withoutVerifying()->get($url);
+            Log::info("Fetching exchange rates from primary API: {$primaryUrl}");
+            $response = Http::withoutVerifying()->get($primaryUrl);
 
             if (!$response->successful()) {
-                Log::error("Fawaz Ahmed Currency API Sync Error: API request failed");
+                Log::warning("Primary Fawaz Ahmed Currency API request failed. Trying fallback URL...");
+                
+                $fallbackUrl = str_replace(
+                    ['{date}', '{apiVersion}', '{endpoint}'],
+                    [$date, $apiVersion, $endpoint],
+                    $this->fallbackUrlTemplate
+                );
+
+                Log::info("Fetching exchange rates from fallback API: {$fallbackUrl}");
+                $response = Http::withoutVerifying()->get($fallbackUrl);
+            }
+
+            if (!$response->successful()) {
+                Log::error("Fawaz Ahmed Currency API Sync Error: Both primary and fallback API requests failed");
                 return [
                     'success' => false,
-                    'message' => "Fawaz Ahmed Currency API request failed"
+                    'message' => "Fawaz Ahmed Currency API requests failed (primary and fallback)"
                 ];
             }
 
-            $ratesList = $response->json('usd'); // format: ["usd" => 1, "eur" => 0.860165, ...]
+            // Extract the base currency code from endpoint (e.g. "currencies/usd.json" -> "usd")
+            $baseCurrency = 'usd';
+            if (preg_match('/currencies\/([a-z0-9]+)\.json/i', $endpoint, $matches)) {
+                $baseCurrency = strtolower($matches[1]);
+            }
+
+            $ratesList = $response->json($baseCurrency); // format: ["usd" => 1, "eur" => 0.860165, ...]
 
             if (!$ratesList) {
-                Log::error("Fawaz Ahmed Currency API Sync Error: rates object for 'usd' not found in response");
+                Log::error("Fawaz Ahmed Currency API Sync Error: rates object for '{$baseCurrency}' not found in response");
                 return [
                     'success' => false,
-                    'message' => "Rates list could not be parsed"
+                    'message' => "Rates list for '{$baseCurrency}' could not be parsed"
                 ];
             }
 
@@ -54,12 +83,13 @@ class ExchangeRateApiService
                 $fromCode = strtolower($rate->currencyFrom->code);
                 $toCode = strtolower($rate->currencyTo->code);
 
+                // If base currency is different from USD, we can compute cross rate relative to baseCurrency
                 if (isset($ratesList[$fromCode]) && isset($ratesList[$toCode])) {
-                    $usdToFrom = floatval($ratesList[$fromCode]);
-                    $usdToTo = floatval($ratesList[$toCode]);
+                    $baseToFrom = floatval($ratesList[$fromCode]);
+                    $baseToTo = floatval($ratesList[$toCode]);
 
-                    // Mid rate from A to B = (USD -> B) / (USD -> A)
-                    $midRate = $usdToTo / $usdToFrom;
+                    // Mid rate from A to B = (Base -> B) / (Base -> A)
+                    $midRate = $baseToTo / $baseToFrom;
 
                     // Calculate spread based on provider reputation
                     $providerName = strtolower($rate->provider->name);
@@ -85,6 +115,8 @@ class ExchangeRateApiService
                         $spread = 0.001; // 0.1% crypto spread
                     } elseif (str_contains($providerName, 'coinbase')) {
                         $spread = 0.004; // 0.4% crypto spread
+                    } elseif (str_contains($providerName, 'express link') || $rate->provider->type === 'agent') {
+                        $spread = 0.020; // 2.0% agent spread
                     }
 
                     // Apply spread
@@ -102,7 +134,7 @@ class ExchangeRateApiService
 
             return [
                 'success' => true,
-                'message' => "Successfully synced {$updatedCount} exchange rates using ExchangeRate-API."
+                'message' => "Successfully synced {$updatedCount} exchange rates using Fawaz Ahmed Currency API."
             ];
 
         } catch (\Exception $e) {

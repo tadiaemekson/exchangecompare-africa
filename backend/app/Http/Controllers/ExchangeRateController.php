@@ -133,6 +133,7 @@ class ExchangeRateController extends Controller
                     'website' => $provider->website,
                     'rating' => $provider->rating,
                     'logo_url' => $provider->logo_url,
+                    'type' => $provider->type,
                 ],
                 'buy_rate' => floatval($rate->buy_rate),
                 'sell_rate' => floatval($rate->sell_rate),

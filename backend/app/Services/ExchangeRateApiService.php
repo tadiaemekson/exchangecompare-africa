@@ -73,6 +73,18 @@ class ExchangeRateApiService
                         $spread = 0.012; // 1.2%
                     } elseif (str_contains($providerName, 'western union')) {
                         $spread = 0.025; // 2.5%
+                    } elseif (str_contains($providerName, 'ecobank')) {
+                        $spread = 0.028; // 2.8% bank spread
+                    } elseif (str_contains($providerName, 'générale') || str_contains($providerName, 'generale')) {
+                        $spread = 0.035; // 3.5% bank spread
+                    } elseif (str_contains($providerName, 'afriland')) {
+                        $spread = 0.030; // 3.0% bank spread
+                    } elseif (str_contains($providerName, 'uba')) {
+                        $spread = 0.025; // 2.5% bank spread
+                    } elseif (str_contains($providerName, 'binance')) {
+                        $spread = 0.001; // 0.1% crypto spread
+                    } elseif (str_contains($providerName, 'coinbase')) {
+                        $spread = 0.004; // 0.4% crypto spread
                     }
 
                     // Apply spread

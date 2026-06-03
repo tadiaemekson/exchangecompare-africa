@@ -14,6 +14,7 @@ interface Provider {
   website: string;
   rating: number;
   logo_url: string;
+  type: string;
 }
 
 interface ComparisonResult {
@@ -46,6 +47,12 @@ export default function Home() {
   const [results, setResults] = useState<ComparisonResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [selectedType, setSelectedType] = useState<string>('all');
+
+  const filteredResults = results.filter(r => {
+    if (selectedType === 'all') return true;
+    return r.provider.type === selectedType;
+  });
 
   useEffect(() => {
     // Load currencies
@@ -258,35 +265,101 @@ export default function Home() {
               </span>
             </div>
 
-            <div className="grid gap-4">
-              {results.map((result, idx) => (
-                <Card 
-                  key={idx} 
-                  className={`overflow-hidden border transition-all duration-300 hover:shadow-md ${
-                    idx === 0 
-                      ? 'border-[#10B981] bg-emerald-50/20 dark:bg-emerald-950/10' 
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'
-                  }`}
-                >
-                  {idx === 0 && (
-                    <div className="bg-[#10B981] text-white text-[10px] font-extrabold px-4 py-1 text-center tracking-widest uppercase">
-                      ⭐ RECOMMANDATION PRINCIPALE (ÉCONOMIE MAXIMALE)
-                    </div>
-                  )}
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <button
+                type="button"
+                onClick={() => setSelectedType('all')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  selectedType === 'all'
+                    ? 'bg-[#2563EB] text-white shadow-sm'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                Toutes les offres ({results.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedType('fintech')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  selectedType === 'fintech'
+                    ? 'bg-[#2563EB] text-white shadow-sm'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                Transfert & Fintech ({results.filter(r => r.provider.type === 'fintech').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedType('bank')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  selectedType === 'bank'
+                    ? 'bg-[#2563EB] text-white shadow-sm'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                Banques ({results.filter(r => r.provider.type === 'bank').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedType('crypto')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  selectedType === 'crypto'
+                    ? 'bg-[#2563EB] text-white shadow-sm'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                Cryptomonnaies ({results.filter(r => r.provider.type === 'crypto').length})
+              </button>
+            </div>
 
-                  <div className="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                    {/* Provider Info */}
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg font-extrabold text-[#0F172A] dark:text-white border border-slate-200/50">
-                        {result.provider.name.charAt(0)}
+            <div className="grid gap-4">
+              {filteredResults.length > 0 ? (
+                filteredResults.map((result, idx) => (
+                  <Card 
+                    key={idx} 
+                    className={`overflow-hidden border transition-all duration-300 hover:shadow-md ${
+                      idx === 0 
+                        ? 'border-[#10B981] bg-emerald-50/20 dark:bg-emerald-950/10' 
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'
+                    }`}
+                  >
+                    {idx === 0 && (
+                      <div className="bg-[#10B981] text-white text-[10px] font-extrabold px-4 py-1 text-center tracking-widest uppercase">
+                        ⭐ RECOMMANDATION PRINCIPALE (ÉCONOMIE MAXIMALE)
                       </div>
-                      <div>
-                        <h3 className="font-extrabold text-base text-slate-900 dark:text-white">{result.provider.name}</h3>
-                        <div className="flex items-center gap-2 text-xs text-slate-400">
-                          <span>⭐ {result.provider.rating}/5</span>
+                    )}
+
+                    <div className="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                      {/* Provider Info */}
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg font-extrabold text-[#0F172A] dark:text-white border border-slate-200/50">
+                          {result.provider.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-extrabold text-base text-slate-900 dark:text-white">{result.provider.name}</h3>
+                            {result.provider.type === 'bank' && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/20">
+                                Banque
+                              </span>
+                            )}
+                            {result.provider.type === 'fintech' && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/20">
+                                Fintech
+                              </span>
+                            )}
+                            {result.provider.type === 'crypto' && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-200/20">
+                                Crypto Exchange
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-slate-400">
+                            <span>⭐ {result.provider.rating}/5</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
                     {/* Rates Detail */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm">
@@ -330,7 +403,12 @@ export default function Home() {
                     </Button>
                   </div>
                 </Card>
-              ))}
+              ))
+            ) : (
+              <div className="text-center py-12 text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                Aucune offre disponible pour cette catégorie.
+              </div>
+            )}
             </div>
           </div>
         ) : (

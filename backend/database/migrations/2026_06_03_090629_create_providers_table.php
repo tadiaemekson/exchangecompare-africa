@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('website')->nullable();
             $table->decimal('rating', 3, 2)->default(5.00);
             $table->string('status')->default('active'); // active, inactive, etc.
+            $table->string('type')->default('fintech'); // fintech, bank, crypto
             $table->string('logo_url')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

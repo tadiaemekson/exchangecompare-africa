@@ -78,7 +78,13 @@ class ExchangeDataSeeder extends Seeder
             ['code' => 'MUR', 'name' => 'Rupee Mauricienne', 'symbol' => '₨', 'country' => 'Maurice'],
             ['code' => 'SCR', 'name' => 'Rupee Seychelloise', 'symbol' => 'SR', 'country' => 'Seychelles'],
             ['code' => 'AOA', 'name' => 'Kwanza', 'symbol' => 'Kz', 'country' => 'Angola'],
-            ['code' => 'MAD', 'name' => 'Moroccan Dirham', 'symbol' => 'DH', 'country' => 'Maroc']
+            ['code' => 'MAD', 'name' => 'Moroccan Dirham', 'symbol' => 'DH', 'country' => 'Maroc'],
+            
+            // Cryptocurrencies
+            ['code' => 'BTC', 'name' => 'Bitcoin', 'symbol' => '₿', 'country' => 'Crypto', 'type' => 'crypto'],
+            ['code' => 'ETH', 'name' => 'Ethereum', 'symbol' => 'Ξ', 'country' => 'Crypto', 'type' => 'crypto'],
+            ['code' => 'USDT', 'name' => 'Tether USDT', 'symbol' => '₮', 'country' => 'Crypto', 'type' => 'crypto'],
+            ['code' => 'SOL', 'name' => 'Solana', 'symbol' => 'SOL', 'country' => 'Crypto', 'type' => 'crypto']
         ];
 
         $currencies = [];
@@ -91,16 +97,18 @@ class ExchangeDataSeeder extends Seeder
                 'name' => $c['name'],
                 'symbol' => $c['symbol'],
                 'country' => $c['country'],
+                'type' => $c['type'] ?? 'fiat',
                 'is_active' => true
             ]);
         }
 
-        // 4. Create Providers
+        // 4. Create Providers (Fintechs, Banks, and Crypto Exchanges)
         $remitly = Provider::create([
             'name' => 'Remitly',
             'website' => 'https://www.remitly.com',
             'rating' => 4.80,
             'status' => 'active',
+            'type' => 'fintech',
             'logo_url' => 'https://upload.wikimedia.org/wikipedia/commons/4/4b/Remitly_logo.svg',
             'is_active' => true
         ]);
@@ -110,6 +118,7 @@ class ExchangeDataSeeder extends Seeder
             'website' => 'https://www.wise.com',
             'rating' => 4.90,
             'status' => 'active',
+            'type' => 'fintech',
             'logo_url' => 'https://upload.wikimedia.org/wikipedia/commons/c/c5/Wise_Logo.svg',
             'is_active' => true
         ]);
@@ -119,6 +128,7 @@ class ExchangeDataSeeder extends Seeder
             'website' => 'https://www.westernunion.com',
             'rating' => 4.20,
             'status' => 'active',
+            'type' => 'fintech',
             'logo_url' => 'https://upload.wikimedia.org/wikipedia/commons/6/63/Western_Union_logo.svg',
             'is_active' => true
         ]);
@@ -128,20 +138,89 @@ class ExchangeDataSeeder extends Seeder
             'website' => 'https://www.worldremit.com',
             'rating' => 4.50,
             'status' => 'active',
+            'type' => 'fintech',
             'logo_url' => 'https://upload.wikimedia.org/wikipedia/commons/8/8c/WorldRemit_Logo.svg',
             'is_active' => true
         ]);
 
-        $providers = [$remitly, $wise, $western, $worldremit];
+        // Seed Banks
+        $ecobank = Provider::create([
+            'name' => 'Ecobank',
+            'website' => 'https://www.ecobank.com',
+            'rating' => 4.10,
+            'status' => 'active',
+            'type' => 'bank',
+            'logo_url' => 'https://ecobank.com/images/logo.png',
+            'is_active' => true
+        ]);
 
-        // 5. Create Rates dynamically for all pairs of these 31 active currencies
+        $socgen = Provider::create([
+            'name' => 'Société Générale',
+            'website' => 'https://www.societegenerale.com',
+            'rating' => 3.90,
+            'status' => 'active',
+            'type' => 'bank',
+            'logo_url' => 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Logo_Societe_Generale.svg',
+            'is_active' => true
+        ]);
+
+        $afriland = Provider::create([
+            'name' => 'Afriland First Bank',
+            'website' => 'https://www.afrilandfirstbank.com',
+            'rating' => 4.00,
+            'status' => 'active',
+            'type' => 'bank',
+            'logo_url' => 'https://afrilandfirstbank.com/logo.png',
+            'is_active' => true
+        ]);
+
+        $uba = Provider::create([
+            'name' => 'UBA Bank',
+            'website' => 'https://www.ubagroup.com',
+            'rating' => 4.20,
+            'status' => 'active',
+            'type' => 'bank',
+            'logo_url' => 'https://upload.wikimedia.org/wikipedia/commons/d/da/UBA_Logo.svg',
+            'is_active' => true
+        ]);
+
+        // Seed Crypto Exchanges
+        $binance = Provider::create([
+            'name' => 'Binance',
+            'website' => 'https://www.binance.com',
+            'rating' => 4.70,
+            'status' => 'active',
+            'type' => 'crypto',
+            'logo_url' => 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Binance_Logo.svg',
+            'is_active' => true
+        ]);
+
+        $coinbase = Provider::create([
+            'name' => 'Coinbase',
+            'website' => 'https://www.coinbase.com',
+            'rating' => 4.50,
+            'status' => 'active',
+            'type' => 'crypto',
+            'logo_url' => 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Coinbase_Logo.svg',
+            'is_active' => true
+        ]);
+
+        $providers = [$remitly, $wise, $western, $worldremit, $ecobank, $socgen, $afriland, $uba, $binance, $coinbase];
+
+        // 5. Create Rates dynamically for all pairs of active currencies
         $currenciesList = array_values($currencies);
 
         foreach ($currenciesList as $from) {
             foreach ($currenciesList as $to) {
                 if ($from->id === $to->id) continue;
 
+                $isCryptoPair = ($from->type === 'crypto' || $to->type === 'crypto');
+
                 foreach ($providers as $provider) {
+                    // Match provider type with transaction type
+                    if ($isCryptoPair && $provider->type !== 'crypto') continue;
+                    if (!$isCryptoPair && $provider->type === 'crypto') continue;
+
                     $feePercentage = 0.00;
                     $fixedFee = 0.00;
 
@@ -165,6 +244,34 @@ class ExchangeDataSeeder extends Seeder
                             $fixedFee = 1.99;
                         }
                         $feePercentage = 1.00;
+                    } elseif (str_contains($providerName, 'ecobank')) {
+                        $fixedFee = 3500.00;
+                        if ($from->code === 'USD' || $from->code === 'EUR') {
+                            $fixedFee = 5.99;
+                        }
+                        $feePercentage = 1.50; // 1.5% bank transfer fee
+                    } elseif (str_contains($providerName, 'générale') || str_contains($providerName, 'generale')) {
+                        $fixedFee = 5000.00;
+                        if ($from->code === 'USD' || $from->code === 'EUR') {
+                            $fixedFee = 7.99;
+                        }
+                        $feePercentage = 2.00;
+                    } elseif (str_contains($providerName, 'afriland')) {
+                        $fixedFee = 4000.00;
+                        if ($from->code === 'USD' || $from->code === 'EUR') {
+                            $fixedFee = 6.50;
+                        }
+                        $feePercentage = 1.80;
+                    } elseif (str_contains($providerName, 'uba')) {
+                        $fixedFee = 3000.00;
+                        if ($from->code === 'USD' || $from->code === 'EUR') {
+                            $fixedFee = 4.99;
+                        }
+                        $feePercentage = 1.20;
+                    } elseif (str_contains($providerName, 'binance')) {
+                        $feePercentage = 0.10; // Binance has a low trading fee of 0.1%
+                    } elseif (str_contains($providerName, 'coinbase')) {
+                        $feePercentage = 0.50; // Coinbase has a slightly higher fee of 0.5%
                     }
 
                     ExchangeRate::create([

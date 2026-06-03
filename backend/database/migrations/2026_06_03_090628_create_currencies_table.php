@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('currencies', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 3)->unique();
+            $table->string('code', 10)->unique();
             $table->string('name');
             $table->string('symbol', 10)->nullable();
             $table->string('country')->nullable();
+            $table->string('type')->default('fiat'); // fiat, crypto
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

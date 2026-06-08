@@ -247,22 +247,6 @@ export default function HomeIndex() {
             EC <Text style={{ color: '#2563EB' }}>ExchangeCompare</Text>
             <Text style={{ color: '#10B981' }}>.africa</Text>
           </Text>
-          
-          {/* Language Switcher */}
-          <View style={[styles.langToggle, { backgroundColor: isDark ? '#1e293b' : '#e2e8f0' }]}>
-            <TouchableOpacity 
-              onPress={() => changeLanguage('fr')} 
-              style={[styles.langBtn, lang === 'fr' && styles.langBtnActive]}
-            >
-              <Text style={[styles.langText, lang === 'fr' && styles.langTextActive]}>FR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => changeLanguage('en')} 
-              style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
-            >
-              <Text style={[styles.langText, lang === 'en' && styles.langTextActive]}>EN</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         {/* Hero Section */}

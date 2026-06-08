@@ -64,8 +64,26 @@ export default function DashboardScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const router = useRouter();
-  const { token, user } = useAuth();
-  const { t } = useLanguage();
+  const { token, user, logout } = useAuth();
+  const { t, lang } = useLanguage();
+
+  const handleLogout = async () => {
+    Alert.alert(
+      lang === 'fr' ? 'Déconnexion' : 'Log Out',
+      lang === 'fr' ? 'Êtes-vous sûr de vouloir vous déconnecter ?' : 'Are you sure you want to log out?',
+      [
+        { text: t.cancel, style: 'cancel' },
+        { text: t.logout, style: 'destructive', onPress: async () => {
+            try {
+              await logout();
+            } catch (err) {
+              console.error(err);
+            }
+          }
+        }
+      ]
+    );
+  };
 
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [alerts, setAlerts] = useState<AlertRule[]>([]);
@@ -215,6 +233,36 @@ export default function DashboardScreen() {
             </View>
           )}
         </View>
+
+        {/* Profile Card */}
+        {user && (
+          <View style={[styles.profileCard, { backgroundColor: isDark ? '#0F172A' : '#ffffff', borderColor: isDark ? '#1E293B' : '#e2e8f0' }]}>
+            <View style={styles.profileHeader}>
+              <View style={styles.avatarContainer}>
+                <Text style={styles.avatarText}>
+                  {user.name ? user.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+                </Text>
+              </View>
+              <View style={styles.profileDetails}>
+                <Text style={[styles.profileName, { color: isDark ? '#ffffff' : '#1E293B' }]}>{user.name}</Text>
+                <Text style={styles.profileEmail}>{user.email}</Text>
+                <View style={styles.badgeRow}>
+                  <View style={[styles.roleBadge, { backgroundColor: user.role === 'admin' ? '#EF4444' : '#2563EB' }]}>
+                    <Text style={styles.roleBadgeText}>{user.role.toUpperCase()}</Text>
+                  </View>
+                  {subscription && (
+                    <View style={styles.planBadge}>
+                      <Text style={styles.planBadgeText}>{subscription.plan.name.toUpperCase()}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Text style={styles.logoutButtonText}>{t.logout}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Subscription SaaS Plans */}
         <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>{t.saasSubscriptions}</Text>
@@ -739,6 +787,87 @@ const styles = StyleSheet.create({
   },
   closeBtnText: {
     color: '#EF4444',
+    fontWeight: 'bold',
+  },
+  profileCard: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 16,
+  },
+  avatarContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  profileDetails: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  profileEmail: {
+    fontSize: 13,
+    color: '#94A3B8',
+    marginBottom: 6,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  roleBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  roleBadgeText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  planBadge: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  planBadgeText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: '#EF4444',
+    borderRadius: 8,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
     fontWeight: 'bold',
   },
 });

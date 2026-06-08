@@ -11,6 +11,10 @@ const translations = {
     logout: "Quitter",
     login: "Se connecter",
     authTitle: "Authentification",
+    profile: "Profil",
+    language: "Langue",
+    languageSettings: "Paramètres de Langue",
+    chooseLanguage: "Choisissez votre langue",
     
     // Hero
     heroTitle: "Comparez les frais et les taux de change pour l'Afrique",
@@ -131,6 +135,10 @@ const translations = {
     logout: "Log Out",
     login: "Log In",
     authTitle: "Authentication",
+    profile: "Profile",
+    language: "Language",
+    languageSettings: "Language Settings",
+    chooseLanguage: "Choose your language",
     
     // Hero
     heroTitle: "Compare money transfer fees and exchange rates to Africa",

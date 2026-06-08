@@ -15,6 +15,7 @@ const translations = {
     language: "Langue",
     languageSettings: "Paramètres de Langue",
     chooseLanguage: "Choisissez votre langue",
+    settings: "Paramètres",
     
     // Hero
     heroTitle: "Comparez les frais et les taux de change pour l'Afrique",
@@ -139,6 +140,7 @@ const translations = {
     language: "Language",
     languageSettings: "Language Settings",
     chooseLanguage: "Choose your language",
+    settings: "Settings",
     
     // Hero
     heroTitle: "Compare money transfer fees and exchange rates to Africa",

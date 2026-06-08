@@ -290,7 +290,7 @@ export default function HomeIndex() {
         modalT.loginRequiredDesc,
         [
           { text: t.cancel, style: 'cancel' },
-          { text: t.login, onPress: () => router.replace('/profile') }
+          { text: t.login, onPress: () => router.replace('/settings') }
         ]
       );
       return;

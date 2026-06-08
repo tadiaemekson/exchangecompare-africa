@@ -26,11 +26,8 @@ export default function AppTabs() {
           <TabTrigger name="index" href="/" asChild>
             <TabButton>{t.comparator}</TabButton>
           </TabTrigger>
-          <TabTrigger name="profile" href="/profile" asChild>
-            <TabButton>{t.profile}</TabButton>
-          </TabTrigger>
-          <TabTrigger name="language" href="/language" asChild>
-            <TabButton>{t.language}</TabButton>
+          <TabTrigger name="settings" href="/settings" asChild>
+            <TabButton>{t.settings}</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>

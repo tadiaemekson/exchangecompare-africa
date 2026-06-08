@@ -15,6 +15,8 @@ import {
   useColorScheme,
   Clipboard,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
 import api from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -48,6 +50,7 @@ interface ComparisonResult {
 export default function HomeIndex() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
+  const router = useRouter();
   const { lang, changeLanguage, t } = useLanguage();
   const { token } = useAuth();
 
@@ -65,6 +68,12 @@ export default function HomeIndex() {
   const [toPickerOpen, setToPickerOpen] = useState(false);
   const [beneficiaryOpen, setBeneficiaryOpen] = useState(false);
   
+  // Quick Alert States (FAB Widget)
+  const [quickAlertOpen, setQuickAlertOpen] = useState(false);
+  const [quickAlertRate, setQuickAlertRate] = useState('');
+  const [quickAlertCondition, setQuickAlertCondition] = useState('above');
+  const [creatingQuickAlert, setCreatingQuickAlert] = useState(false);
+  
   // Beneficiary details form
   const [selectedResult, setSelectedResult] = useState<ComparisonResult | null>(null);
   const [beneficiaryForm, setBeneficiaryForm] = useState({
@@ -74,6 +83,47 @@ export default function HomeIndex() {
     beneficiary_phone: ''
   });
   const [savingBeneficiary, setSavingBeneficiary] = useState(false);
+
+  // Notifications State
+  const [showNotificationBadge, setShowNotificationBadge] = useState(true);
+
+  // Market watch feed items
+  const newsFeed = lang === 'fr' ? [
+    { id: 1, title: "Taux EUR/XAF en hausse de +0.4% chez Express Link Direct.", source: "Marché CEMAC", time: "Il y a 5 min", trend: "up", symbol: "📈" },
+    { id: 2, title: "L'adoption des transferts Crypto USDT progresse en Afrique centrale.", source: "Crypto News", time: "Il y a 20 min", trend: "up", symbol: "🪙" },
+    { id: 3, title: "Ecobank ajuste les limites journalières de retrait sur guichet.", source: "Finance Infos", time: "Il y a 1h", trend: "neutral", symbol: "🏦" },
+  ] : [
+    { id: 1, title: "Wise EUR/XAF rate is up +0.4% at Express Link Direct.", source: "CEMAC Market", time: "5m ago", trend: "up", symbol: "📈" },
+    { id: 2, title: "USDT crypto transfer adoption increases in Central Africa.", source: "Crypto News", time: "20m ago", trend: "up", symbol: "🪙" },
+    { id: 3, title: "Ecobank adjusts daily OTC withdrawal limits for customers.", source: "Finance Info", time: "1h ago", trend: "neutral", symbol: "🏦" },
+  ];
+
+  const modalT = {
+    fr: {
+      quickAlertTitle: "Créer une alerte de taux",
+      quickAlertDesc: "Configurez une alerte instantanée pour être notifié par e-mail.",
+      targetRate: "Taux cible",
+      condition: "Condition",
+      createBtn: "Créer l'alerte",
+      loginRequired: "Connexion requise",
+      loginRequiredDesc: "Veuillez vous connecter pour configurer vos alertes de taux.",
+      alertCreated: "Alerte créée !",
+      alertCreatedDesc: "Vous recevrez un email dès que le taux cible sera atteint.",
+      alertCreateFail: "Échec de la création de l'alerte.",
+    },
+    en: {
+      quickAlertTitle: "Create Rate Alert",
+      quickAlertDesc: "Configure an instant alert to be notified via email.",
+      targetRate: "Target rate",
+      condition: "Condition",
+      createBtn: "Create alert",
+      loginRequired: "Login Required",
+      loginRequiredDesc: "Please log in to configure rate alerts.",
+      alertCreated: "Alert created!",
+      alertCreatedDesc: "You will receive an email once the target rate is reached.",
+      alertCreateFail: "Failed to create rate alert.",
+    }
+  }[lang === 'fr' ? 'fr' : 'en'];
 
   useEffect(() => {
     fetchCurrencies();
@@ -232,6 +282,43 @@ export default function HomeIndex() {
     }
   };
 
+  const handleCreateQuickAlert = async () => {
+    if (!token) {
+      setQuickAlertOpen(false);
+      Alert.alert(
+        modalT.loginRequired,
+        modalT.loginRequiredDesc,
+        [
+          { text: t.cancel, style: 'cancel' },
+          { text: t.login, onPress: () => router.replace('/profile') }
+        ]
+      );
+      return;
+    }
+
+    if (!currencyFrom || !currencyTo || !quickAlertRate) {
+      Alert.alert('Error', 'Please fill in target rate.');
+      return;
+    }
+
+    setCreatingQuickAlert(true);
+    try {
+      await api.post('/alerts', {
+        currency_from_id: currencyFrom.id,
+        currency_to_id: currencyTo.id,
+        target_rate: quickAlertRate,
+        condition: quickAlertCondition
+      });
+      Alert.alert(modalT.alertCreated, modalT.alertCreatedDesc);
+      setQuickAlertRate('');
+      setQuickAlertOpen(false);
+    } catch (err) {
+      Alert.alert(t.error, modalT.alertCreateFail);
+    } finally {
+      setCreatingQuickAlert(false);
+    }
+  };
+
   const bestFintech = getBestOffer('fintech');
   const bestBank = getBestOffer('bank');
   const bestCrypto = getBestOffer('crypto');
@@ -239,23 +326,106 @@ export default function HomeIndex() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#070b16' : '#F8FAFC' }]}>
+      <StatusBar style="auto" />
+      
+      {/* 1. App Header & Top Bar */}
+      <View style={[styles.header, { borderBottomColor: isDark ? '#1E293B' : '#E2E8F0', backgroundColor: isDark ? '#070b16' : '#F8FAFC' }]}>
+        <Text style={[styles.logoText, { color: isDark ? '#ffffff' : '#0F172A' }]}>
+          EC <Text style={{ color: '#2563EB' }}>ExchangeCompare</Text>
+          <Text style={{ color: '#10B981' }}>.africa</Text>
+        </Text>
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity style={styles.headerIconBtn}>
+            <Text style={{ fontSize: 18 }}>🔍</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.headerIconBtn}
+            onPress={() => {
+              setShowNotificationBadge(false);
+              Alert.alert(lang === 'fr' ? 'Notifications' : 'Notifications', lang === 'fr' ? 'Aucune nouvelle notification.' : 'No new notifications.');
+            }}
+          >
+            <Text style={{ fontSize: 18 }}>🔔</Text>
+            {showNotificationBadge && <View style={styles.notificationDot} />}
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* Header Navigation */}
-        <View style={styles.header}>
-          <Text style={[styles.logoText, { color: isDark ? '#ffffff' : '#0F172A' }]}>
-            EC <Text style={{ color: '#2563EB' }}>ExchangeCompare</Text>
-            <Text style={{ color: '#10B981' }}>.africa</Text>
+        {/* 2. Top Navigation Tabs Category Slider */}
+        <View style={styles.topTabsWrapper}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topTabsScrollContainer}>
+            <TouchableOpacity 
+              style={[styles.topTabPill, selectedType === 'all' && styles.topTabPillActive]}
+              onPress={() => setSelectedType('all')}
+            >
+              <Text style={[styles.topTabText, selectedType === 'all' && styles.topTabActiveText]}>
+                🌍 {lang === 'fr' ? 'Tout' : 'All'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.topTabPill, selectedType === 'fintech' && styles.topTabPillActive]}
+              onPress={() => setSelectedType('fintech')}
+            >
+              <Text style={[styles.topTabText, selectedType === 'fintech' && styles.topTabActiveText]}>
+                🚀 Fintech
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.topTabPill, selectedType === 'bank' && styles.topTabPillActive]}
+              onPress={() => setSelectedType('bank')}
+            >
+              <Text style={[styles.topTabText, selectedType === 'bank' && styles.topTabActiveText]}>
+                🏦 {lang === 'fr' ? 'Banques' : 'Banks'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.topTabPill, selectedType === 'crypto' && styles.topTabPillActive]}
+              onPress={() => setSelectedType('crypto')}
+            >
+              <Text style={[styles.topTabText, selectedType === 'crypto' && styles.topTabActiveText]}>
+                🪙 Crypto
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.topTabPill, selectedType === 'agent' && styles.topTabPillActive]}
+              onPress={() => setSelectedType('agent')}
+            >
+              <Text style={[styles.topTabText, selectedType === 'agent' && styles.topTabActiveText]}>
+                👤 {lang === 'fr' ? 'Agents' : 'Agents'}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+
+        {/* 3. Feature Story / Hero Card */}
+        <TouchableOpacity 
+          activeOpacity={0.9}
+          onPress={() => setSelectedType('agent')}
+          style={[styles.heroCard, { shadowColor: '#2563EB' }]}
+        >
+          <View style={styles.heroCardBadge}>
+            <Text style={styles.heroCardBadgeText}>🔥 {lang === 'fr' ? 'MEILLEUR DEAL P2P' : 'BEST P2P RATE'}</Text>
+          </View>
+          <Text style={styles.heroCardTitle}>
+            {lang === 'fr' ? 'Express Link Direct propose le meilleur taux CEMAC' : 'Express Link Direct offers CEMAC\'s top yield'}
           </Text>
-        </View>
+          <Text style={styles.heroCardDesc}>
+            {lang === 'fr' 
+              ? 'Transférez via WhatsApp avec 2.0% de spread et recevez des fonds instantanément.' 
+              : 'Transfer via WhatsApp with a low 2.0% spread and receive your funds instantly.'}
+          </Text>
+          <View style={styles.heroCardFooter}>
+            <Text style={styles.heroCardButtonText}>{lang === 'fr' ? 'Voir l\'offre →' : 'View Offer →'}</Text>
+          </View>
+        </TouchableOpacity>
 
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <Text style={[styles.heroTitle, { color: isDark ? '#ffffff' : '#0F172A' }]}>{t.heroTitle}</Text>
-          <Text style={styles.heroSubtitle}>{t.heroSubtitle}</Text>
-        </View>
-
-        {/* Calculator Card */}
+        {/* 4. Calculator Card */}
         <View style={[styles.calcCard, { backgroundColor: isDark ? '#0F172A' : '#ffffff', borderColor: isDark ? '#1E293B' : '#e2e8f0' }]}>
           <View style={styles.inputGroup}>
             <Text style={[styles.inputLabel, { color: isDark ? '#94A3B8' : '#64748B' }]}>{t.sendAmount}</Text>
@@ -286,9 +456,8 @@ export default function HomeIndex() {
           </View>
         </View>
 
-        {/* Categories Summary Cards */}
+        {/* 5. Categories Summary Cards Grid */}
         <View style={styles.summaryGrid}>
-          {/* Fintech */}
           <TouchableOpacity 
             style={[styles.summaryCard, selectedType === 'fintech' && styles.cardActiveFintech]}
             onPress={() => setSelectedType(selectedType === 'fintech' ? 'all' : 'fintech')}
@@ -300,7 +469,6 @@ export default function HomeIndex() {
             {bestFintech && <Text style={styles.cardRate}>Taux: {bestFintech.buy_rate.toFixed(4)}</Text>}
           </TouchableOpacity>
 
-          {/* Bank */}
           <TouchableOpacity 
             style={[styles.summaryCard, selectedType === 'bank' && styles.cardActiveBank]}
             onPress={() => setSelectedType(selectedType === 'bank' ? 'all' : 'bank')}
@@ -312,7 +480,6 @@ export default function HomeIndex() {
             {bestBank && <Text style={styles.cardRate}>Taux: {bestBank.buy_rate.toFixed(4)}</Text>}
           </TouchableOpacity>
 
-          {/* Crypto */}
           <TouchableOpacity 
             style={[styles.summaryCard, selectedType === 'crypto' && styles.cardActiveCrypto]}
             onPress={() => setSelectedType(selectedType === 'crypto' ? 'all' : 'crypto')}
@@ -325,15 +492,15 @@ export default function HomeIndex() {
           </TouchableOpacity>
         </View>
 
-        {/* Results Title & Filter Indicator */}
+        {/* 6. Results Title */}
         <View style={styles.resultsHeader}>
           <Text style={[styles.resultsTitle, { color: isDark ? '#ffffff' : '#0F172A' }]}>{t.availableOffers}</Text>
           <Text style={styles.resultsSubtitle}>{t.feesIncluded}</Text>
         </View>
 
-        {/* Detailed Offers List */}
+        {/* 7. Detailed Offers List */}
         {loading ? (
-          <ActivityIndicator size="large" color="#2563EB" style={{ marginVertical: 40 }} />
+          <ActivityIndicator size="large" color="#2563EB" style={{ marginVertical: 30 }} />
         ) : (
           <View style={styles.offersList}>
             {getFilteredResults().map((res, index) => (
@@ -385,7 +552,44 @@ export default function HomeIndex() {
           </View>
         )}
 
+        {/* 8. News Feed List / Market Insights */}
+        <View style={styles.newsSection}>
+          <Text style={[styles.newsSectionTitle, { color: isDark ? '#ffffff' : '#0F172A' }]}>
+            📊 {lang === 'fr' ? 'Market Watch & Actualités' : 'Market Watch & News'}
+          </Text>
+          <View style={styles.newsList}>
+            {newsFeed.map((item) => (
+              <View 
+                key={item.id} 
+                style={[styles.newsCard, { backgroundColor: isDark ? '#0F172A' : '#ffffff', borderColor: isDark ? '#1E293B' : '#e2e8f0' }]}
+              >
+                <View style={styles.newsIconBox}>
+                  <Text style={{ fontSize: 22 }}>{item.symbol}</Text>
+                </View>
+                <View style={styles.newsContent}>
+                  <Text style={[styles.newsTitleText, { color: isDark ? '#ffffff' : '#0F172A' }]}>
+                    {item.title}
+                  </Text>
+                  <View style={styles.newsMeta}>
+                    <Text style={styles.newsSource}>{item.source}</Text>
+                    <Text style={styles.newsDot}>•</Text>
+                    <Text style={styles.newsTime}>{item.time}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
       </ScrollView>
+
+      {/* 9. Floating FAB Action Button */}
+      <TouchableOpacity 
+        style={styles.floatingFab}
+        onPress={() => setQuickAlertOpen(true)}
+      >
+        <Text style={styles.fabText}>+ 🔔</Text>
+      </TouchableOpacity>
 
       {/* Currency Selection Modals */}
       {/* From Picker */}
@@ -501,6 +705,73 @@ export default function HomeIndex() {
         </View>
       </Modal>
 
+      {/* FAB Quick alert modal */}
+      <Modal visible={quickAlertOpen} animationType="slide" transparent>
+        <View style={styles.modalBg}>
+          <View style={[styles.modalBox, { backgroundColor: isDark ? '#0F172A' : '#ffffff', width: '90%' }]}>
+            <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#000000' }]}>{modalT.quickAlertTitle}</Text>
+            <Text style={styles.modalNotice}>{modalT.quickAlertDesc}</Text>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.formLabel, { color: isDark ? '#94A3B8' : '#64748B' }]}>{lang === 'fr' ? 'Paire active' : 'Active pair'}</Text>
+              <View style={styles.alertPairBox}>
+                <Text style={[styles.alertPairText, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {currencyFrom?.code} ➔ {currencyTo?.code}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.formLabel, { color: isDark ? '#94A3B8' : '#64748B' }]}>{modalT.condition} *</Text>
+              <View style={styles.alertConditionRow}>
+                <TouchableOpacity 
+                  style={[styles.alertCondBtn, quickAlertCondition === 'above' && styles.alertCondBtnActive]}
+                  onPress={() => setQuickAlertCondition('above')}
+                >
+                  <Text style={[styles.alertCondBtnText, quickAlertCondition === 'above' && styles.alertCondBtnTextActive]}>
+                    {t.aboveOrEqual.split(' ')[1] || '≥'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.alertCondBtn, quickAlertCondition === 'below' && styles.alertCondBtnActive]}
+                  onPress={() => setQuickAlertCondition('below')}
+                >
+                  <Text style={[styles.alertCondBtnText, quickAlertCondition === 'below' && styles.alertCondBtnTextActive]}>
+                    {t.belowOrEqual.split(' ')[1] || '≤'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.formLabel, { color: isDark ? '#94A3B8' : '#64748B' }]}>{modalT.targetRate} *</Text>
+              <TextInput
+                style={[styles.formInput, { color: isDark ? '#ffffff' : '#000000', borderColor: isDark ? '#1E293B' : '#cbd5e1' }]}
+                keyboardType="numeric"
+                value={quickAlertRate}
+                onChangeText={setQuickAlertRate}
+                placeholder={t.targetRatePlaceholder}
+                placeholderTextColor="#64748B"
+              />
+            </View>
+
+            <View style={styles.btnRow}>
+              <TouchableOpacity style={[styles.modalBtn, styles.btnCancel]} onPress={() => setQuickAlertOpen(false)}>
+                <Text style={styles.btnCancelText}>{t.cancel}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, styles.btnConfirm]} onPress={handleCreateQuickAlert} disabled={creatingQuickAlert}>
+                {creatingQuickAlert ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.btnConfirmText}>{modalT.createBtn}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -511,53 +782,125 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 100,
+    paddingBottom: 110,
   },
+  
+  // 1. App Header & Top Bar Styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    ...Platform.select({
+      ios: { paddingTop: 4 },
+      android: { paddingTop: 10 }
+    })
   },
   logoText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
   },
-  langToggle: {
+  headerRightActions: {
     flexDirection: 'row',
-    borderRadius: 8,
-    padding: 2,
+    alignItems: 'center',
+    gap: 12,
   },
-  langBtn: {
+  headerIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+  },
+
+  // 2. Top Navigation Category Pills
+  topTabsWrapper: {
+    marginVertical: 14,
+  },
+  topTabsScrollContainer: {
+    gap: 8,
+    paddingRight: 16,
+  },
+  topTabPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  topTabPillActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#3B82F6',
+  },
+  topTabText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#94A3B8',
+  },
+  topTabActiveText: {
+    color: '#ffffff',
+  },
+
+  // 3. Feature Story / Hero Card
+  heroCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    backgroundColor: '#312E81', // Indigo deep background
+    borderWidth: 1,
+    borderColor: '#4338CA',
+    elevation: 5,
+  },
+  heroCardBadge: {
+    backgroundColor: '#EF4444',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginBottom: 10,
   },
-  langBtnActive: {
-    backgroundColor: '#ffffff',
-  },
-  langText: {
-    fontSize: 10,
+  heroCardBadgeText: {
+    color: '#ffffff',
+    fontSize: 9,
     fontWeight: 'bold',
-    color: '#64748B',
   },
-  langTextActive: {
-    color: '#2563EB',
-  },
-  heroSection: {
-    marginBottom: 20,
-  },
-  heroTitle: {
-    fontSize: 26,
+  heroCardTitle: {
+    color: '#ffffff',
+    fontSize: 18,
     fontWeight: '900',
-    lineHeight: 32,
-    marginBottom: 8,
+    marginBottom: 6,
+    lineHeight: 22,
   },
-  heroSubtitle: {
+  heroCardDesc: {
+    color: '#C7D2FE',
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 14,
+  },
+  heroCardFooter: {
+    alignSelf: 'flex-start',
+  },
+  heroCardButtonText: {
+    color: '#ffffff',
     fontSize: 13,
-    color: '#94A3B8',
-    lineHeight: 18,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
+
+  // 4. Calculator Card Styles
   calcCard: {
     borderRadius: 16,
     padding: 16,
@@ -613,6 +956,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginTop: 18,
   },
+
+  // 5. Categories Summary Cards Grid
   summaryGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -656,6 +1001,8 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     marginTop: 4,
   },
+
+  // 6. Results Header Styles
   resultsHeader: {
     marginBottom: 12,
   },
@@ -667,8 +1014,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#94A3B8',
   },
+
+  // 7. Detailed Offers List Styles
   offersList: {
     gap: 12,
+    marginBottom: 24,
   },
   offerItem: {
     borderRadius: 12,
@@ -739,6 +1089,89 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     marginVertical: 20,
   },
+
+  // 8. News & Market Watch Feed
+  newsSection: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  newsSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 14,
+  },
+  newsList: {
+    gap: 10,
+  },
+  newsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+  },
+  newsIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#1E293B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  newsContent: {
+    flex: 1,
+  },
+  newsTitleText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  newsMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  newsSource: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  newsDot: {
+    fontSize: 10,
+    color: '#64748B',
+    marginHorizontal: 5,
+  },
+  newsTime: {
+    fontSize: 10,
+    color: '#64748B',
+  },
+
+  // 9. Floating FAB button styles
+  floatingFab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2563EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    zIndex: 999,
+  },
+  fabText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  // Modals Styles
   modalBg: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -748,7 +1181,6 @@ const styles = StyleSheet.create({
   modalBox: {
     borderRadius: 16,
     padding: 20,
-    width: '80%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.25,
@@ -826,5 +1258,45 @@ const styles = StyleSheet.create({
   btnConfirmText: {
     color: '#ffffff',
     fontWeight: 'bold',
+  },
+
+  // FAB Quick Alert specific styles
+  alertPairBox: {
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#2563EB',
+  },
+  alertPairText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  alertConditionRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  alertCondBtn: {
+    flex: 1,
+    height: 40,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#4b5563',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  alertCondBtnActive: {
+    borderColor: '#2563EB',
+    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+  },
+  alertCondBtnText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#94A3B8',
+  },
+  alertCondBtnTextActive: {
+    color: '#2563EB',
   },
 });

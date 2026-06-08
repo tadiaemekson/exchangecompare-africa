@@ -40,6 +40,7 @@ function NavigationWrapper({ isDark }: { isDark: boolean }) {
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="compare" />
+      <Tabs.Screen name="research" />
       <Tabs.Screen name="settings" />
       <Tabs.Screen 
         name="auth" 
@@ -103,6 +104,9 @@ function CustomTabBar({ state, descriptors, navigation, isDark, t }: CustomTabBa
           } else if (route.name === 'compare') {
             label = t.comparator || 'Compare';
             icon = '🔄';
+          } else if (route.name === 'research') {
+            label = t.research || 'Research';
+            icon = '🔍';
           } else if (route.name === 'settings') {
             label = t.settings || 'Settings';
             icon = '⚙️';

@@ -157,12 +157,6 @@ export default function HomeFeedIndex() {
         <View style={styles.headerRightActions}>
           <TouchableOpacity 
             style={styles.headerIconBtn}
-            onPress={() => router.push('/compare')}
-          >
-            <Text style={{ fontSize: 18 }}>🔍</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.headerIconBtn}
             onPress={() => {
               setShowNotificationBadge(false);
               Alert.alert(

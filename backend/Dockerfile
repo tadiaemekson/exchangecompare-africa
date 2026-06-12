@@ -37,8 +37,8 @@ RUN chmod +x /var/www/html/docker-entrypoint.sh
 ENTRYPOINT ["/var/www/html/docker-entrypoint.sh"]
 
 # Set permissions for Laravel storage and cache directories
-RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache /var/log/supervisor \
+    && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/log/supervisor
 
 # Start supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

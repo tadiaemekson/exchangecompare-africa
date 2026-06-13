@@ -31,10 +31,12 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async () => {
+    setErrorMsg('');
     if (!email || !password || (!isLogin && !name)) {
-      Alert.alert('Error', 'Please fill in all mandatory fields.');
+      setErrorMsg('Please fill in all mandatory fields.');
       return;
     }
 
@@ -51,7 +53,7 @@ export default function AuthScreen() {
       }
     } catch (err: any) {
       console.error(err);
-      Alert.alert('Error', err.message || (isLogin ? t.loginErrorDefault : t.registerErrorDefault));
+      setErrorMsg(err.message || (isLogin ? t.loginErrorDefault : t.registerErrorDefault));
     } finally {
       setLoading(false);
     }
@@ -172,6 +174,10 @@ export default function AuthScreen() {
               placeholderTextColor="#64748B"
             />
           </View>
+
+          {errorMsg ? (
+            <Text style={styles.errorText}>{errorMsg}</Text>
+          ) : null}
 
           <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={loading}>
             {loading ? (
@@ -318,6 +324,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'uppercase',
     marginBottom: 30,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   logoutBtn: {
     backgroundColor: '#EF4444',

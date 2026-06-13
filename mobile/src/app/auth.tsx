@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -10,7 +9,9 @@ import {
   Alert,
   StyleSheet,
   useColorScheme,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -71,7 +72,7 @@ export default function AuthScreen() {
             {lang === 'fr' ? 'Bienvenue,' : 'Welcome,'} {user.name}!
           </Text>
           <Text style={styles.emailText}>{user.email}</Text>
-          <Text style={styles.roleText}>{lang === 'fr' ? 'Rôle:' : 'Role:'} {user.role.toUpperCase()}</Text>
+          <Text style={styles.roleText}>{lang === 'fr' ? 'Rôle:' : 'Role:'} {(user.role || 'user').toUpperCase()}</Text>
           
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} disabled={loading}>
             {loading ? (
@@ -218,10 +219,17 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+    }),
     elevation: 2,
   },
   tabText: {
@@ -236,10 +244,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.05)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+      },
+    }),
     elevation: 2,
   },
   formGroup: {

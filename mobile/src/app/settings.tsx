@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -11,7 +10,9 @@ import {
   StyleSheet,
   useColorScheme,
   Modal,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -215,11 +216,11 @@ export default function SettingsScreen() {
                 <Text style={styles.profileEmail}>{user.email}</Text>
                 <View style={styles.badgeRow}>
                   <View style={[styles.roleBadge, { backgroundColor: user.role === 'admin' ? '#EF4444' : '#2563EB' }]}>
-                    <Text style={styles.roleBadgeText}>{user.role.toUpperCase()}</Text>
+                    <Text style={styles.roleBadgeText}>{(user.role || 'user').toUpperCase()}</Text>
                   </View>
-                  {subscription && (
+                  {subscription && subscription.plan && (
                     <View style={styles.planBadge}>
-                      <Text style={styles.planBadgeText}>{subscription.plan.name.toUpperCase()}</Text>
+                      <Text style={styles.planBadgeText}>{(subscription.plan.name || '').toUpperCase()}</Text>
                     </View>
                   )}
                 </View>
@@ -522,10 +523,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+      },
+    }),
     elevation: 3,
     marginBottom: 10,
   },
@@ -637,10 +645,17 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.05)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+      },
+    }),
     elevation: 2,
   },
   langCardActive: {

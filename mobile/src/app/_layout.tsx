@@ -1,5 +1,6 @@
 import React from 'react';
-import { DarkTheme, DefaultTheme, ThemeProvider, Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { 
   useColorScheme, 
   View, 
@@ -155,10 +156,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '90%', // centered pill size
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 8px 12px rgba(0, 0, 0, 0.2)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+      },
+    }),
     elevation: 8,
     borderWidth: 1,
   },

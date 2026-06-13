@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -11,7 +10,9 @@ import {
   Alert,
   StyleSheet,
   useColorScheme,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import api from '../services/api';
@@ -187,7 +188,7 @@ export default function HomeFeedIndex() {
         <TouchableOpacity 
           activeOpacity={0.9}
           onPress={() => router.push('/compare')}
-          style={[styles.heroCard, { shadowColor: '#2563EB' }]}
+          style={[styles.heroCard, Platform.select({ web: { boxShadow: '0px 4px 12px rgba(37, 99, 235, 0.3)' }, default: { shadowColor: '#2563EB' } })]}
         >
           <View style={styles.heroCardBadge}>
             <Text style={styles.heroCardBadgeText}>🔥 {lang === 'fr' ? 'MEILLEUR TAUX AGENT' : 'BEST AGENT RATE'}</Text>
@@ -601,10 +602,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563EB',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 4px 6px rgba(37, 99, 235, 0.3)',
+      },
+      default: {
+        shadowColor: '#2563EB',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+      },
+    }),
     elevation: 8,
     zIndex: 999,
   },
@@ -624,10 +632,17 @@ const styles = StyleSheet.create({
   modalBox: {
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 10px 10px rgba(0, 0, 0, 0.25)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+      },
+    }),
     elevation: 10,
   },
   modalTitle: {

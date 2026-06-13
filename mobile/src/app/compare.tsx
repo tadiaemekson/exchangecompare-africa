@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -13,7 +12,9 @@ import {
   StyleSheet,
   useColorScheme,
   Clipboard,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import api from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -105,7 +106,14 @@ export default function CompareScreen() {
           currency_to: currencyTo.code,
         }
       });
-      setResults(res.data.recommendations);
+      const mapped = (res.data.recommendations || []).map((r: any) => ({
+        provider: r.provider,
+        converted_amount: r.amount_received,
+        buy_rate: r.buy_rate,
+        sell_rate: r.sell_rate,
+        fees: r.total_fees_source,
+      }));
+      setResults(mapped);
     } catch (err) {
       console.error('Comparison error', err);
       Alert.alert(t.error, 'Failed to compare rates.');
@@ -169,9 +177,9 @@ export default function CompareScreen() {
         amount,
         converted_amount: result.converted_amount,
         rate: result.buy_rate,
-        provider_id: result.provider.id,
-        currency_from_id: currencyFrom?.id,
-        currency_to_id: currencyTo?.id,
+        best_provider_id: result.provider.id,
+        from_currency_id: currencyFrom?.id,
+        to_currency_id: currencyTo?.id,
       });
       Alert.alert(t.savedSuccess, '', [{ text: 'OK', onPress: redirectToProvider }]);
     } catch (err) {
@@ -194,9 +202,9 @@ export default function CompareScreen() {
         amount,
         converted_amount: selectedResult.converted_amount,
         rate: selectedResult.buy_rate,
-        provider_id: selectedResult.provider.id,
-        currency_from_id: currencyFrom.id,
-        currency_to_id: currencyTo.id,
+        best_provider_id: selectedResult.provider.id,
+        from_currency_id: currencyFrom.id,
+        to_currency_id: currencyTo.id,
         beneficiary_details: beneficiaryForm,
       });
 
@@ -388,7 +396,7 @@ export default function CompareScreen() {
                 <View style={styles.offerRow}>
                   <View>
                     <Text style={[styles.providerName, { color: isDark ? '#ffffff' : '#0F172A' }]}>{res.provider.name}</Text>
-                    <Text style={styles.providerTypeText}>{res.provider.type.toUpperCase()}</Text>
+                    <Text style={styles.providerTypeText}>{(res.provider.type || '').toUpperCase()}</Text>
                   </View>
 
                   <View style={{ alignItems: 'flex-end' }}>
@@ -558,10 +566,17 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+      },
+    }),
     elevation: 3,
   },
   inputGroup: {
@@ -780,10 +795,17 @@ const styles = StyleSheet.create({
   modalBox: {
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 10px 10px rgba(0, 0, 0, 0.25)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+      },
+    }),
     elevation: 10,
   },
   modalTitle: {

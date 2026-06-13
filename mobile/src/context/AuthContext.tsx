@@ -54,7 +54,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(userToken);
       setUser(userData);
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Login failed';
+      let msg = 'Login failed';
+      if (err.response?.data?.errors) {
+        const errorDetails = Object.values(err.response.data.errors).flat().join('\n');
+        if (errorDetails) msg = errorDetails;
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      }
       throw new Error(msg);
     }
   };
@@ -70,7 +76,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(userToken);
       setUser(userData);
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Registration failed';
+      let msg = 'Registration failed';
+      if (err.response?.data?.errors) {
+        const errorDetails = Object.values(err.response.data.errors).flat().join('\n');
+        if (errorDetails) msg = errorDetails;
+      } else if (err.response?.data?.message) {
+        msg = err.response.data.message;
+      }
       throw new Error(msg);
     }
   };

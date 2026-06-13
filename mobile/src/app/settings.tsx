@@ -170,12 +170,21 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = async () => {
+    if (Platform.OS === 'web') {
+      try {
+        await logout();
+      } catch (err) {
+        console.error(err);
+      }
+      return;
+    }
+
     Alert.alert(
       lang === 'fr' ? 'Déconnexion' : 'Log Out',
       lang === 'fr' ? 'Êtes-vous sûr de vouloir vous déconnecter ?' : 'Are you sure you want to log out?',
       [
-        { text: t.cancel, style: 'cancel' },
-        { text: t.logout, style: 'destructive', onPress: async () => {
+        { text: t.cancel || 'Cancel', style: 'cancel' },
+        { text: t.logout || 'Log Out', style: 'destructive', onPress: async () => {
             try {
               await logout();
             } catch (err) {

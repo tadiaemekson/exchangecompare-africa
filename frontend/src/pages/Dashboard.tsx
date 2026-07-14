@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Bell, Plus, Trash2, CreditCard, History, Check } from 'lucide-react';
+import { Bell, Plus, Trash2, History } from 'lucide-react';
 import api from '@/services/api';
 import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
@@ -35,17 +35,9 @@ interface Conversion {
   currencyTo?: { code: string };
 }
 
-interface Plan {
-  id: number;
-  name: string;
-  price: number;
-}
 
-interface Subscription {
-  id: number;
-  plan_id: number;
-  plan: Plan;
-}
+
+
 
 interface Currency {
   id: number;
@@ -165,15 +157,11 @@ export default function Dashboard() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [conversions, setConversions] = useState<Conversion[]>([]);
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  
   // Form state
   const [currencyFrom, setCurrencyFrom] = useState('');
   const [currencyTo, setCurrencyTo] = useState('');
   const [targetRate, setTargetRate] = useState('');
   const [condition, setCondition] = useState('above');
-  const [loading, setLoading] = useState(false);
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
 
   useEffect(() => {
@@ -193,19 +181,15 @@ export default function Dashboard() {
 
   const fetchData = async () => {
     try {
-      const [alertsRes, curRes, convRes, plansRes, subRes] = await Promise.all([
+      const [alertsRes, curRes, convRes] = await Promise.all([
         api.get('/alerts'),
         api.get('/currencies'),
-        api.get('/conversions'),
-        api.get('/plans'),
-        api.get('/subscription')
+        api.get('/conversions')
       ]);
 
       setAlerts(alertsRes.data);
       setCurrencies(curRes.data);
       setConversions(convRes.data);
-      setPlans(plansRes.data);
-      setSubscription(subRes.data);
 
       if (curRes.data.length > 0) {
         setCurrencyFrom(curRes.data[0].id.toString());
@@ -243,18 +227,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleSubscribe = async (planId: number) => {
-    setLoading(true);
-    try {
-      const res = await api.post('/subscribe', { plan_id: planId });
-      setSubscription(res.data);
-      toast.success(t.subUpdated, { description: `${t.subUpdatedDesc}${res.data.plan.name}` });
-      setLoading(false);
-    } catch (err) {
-      toast.error(t.subUpdateFail);
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
@@ -264,62 +236,6 @@ export default function Dashboard() {
       {/* Main Container */}
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">
         
-        {/* Row 1: Subscriptions plans */}
-        <section className="space-y-4">
-          <h2 className="text-xl font-bold flex items-center gap-2 text-slate-900 dark:text-white font-display">
-            <CreditCard className="text-[#2563EB]" />
-            {t.saasSubscriptions}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {plans.map((plan) => {
-              const isActive = subscription?.plan_id === plan.id;
-              return (
-                <Card key={plan.id} className={`border relative overflow-hidden transition-all ${
-                  isActive 
-                    ? 'border-[#2563EB] shadow-md shadow-blue-100 dark:shadow-none bg-blue-50/10 dark:bg-slate-900' 
-                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'
-                }`}>
-                  {isActive && (
-                    <div className="absolute top-0 right-0 bg-[#2563EB] text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg">
-                      {t.active}
-                    </div>
-                  )}
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">{plan.name}</CardTitle>
-                    <div className="mt-2 flex items-baseline">
-                      <span className="text-3xl font-black text-slate-900 dark:text-white">{plan.price.toFixed(2)} $</span>
-                      <span className="text-slate-400 text-xs ml-1">{t.perMonth}</span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <ul className="text-xs text-slate-500 space-y-2">
-                      <li className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-[#10B981]" /> {t.unlimitedComparisons}</li>
-                      <li className="flex items-center gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-[#10B981]" />{' '}
-                        {plan.price === 0 ? t.alertsLimit3 : plan.price < 20 ? t.alertsLimit15 : t.alertsLimitUnlimited}
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-[#10B981]" />{' '}
-                        {plan.price === 0 ? t.standardUpdate : t.instantUpdate}
-                      </li>
-                    </ul>
-                    <Button 
-                      onClick={() => handleSubscribe(plan.id)}
-                      disabled={loading || isActive}
-                      className={`w-full h-9 font-bold text-xs ${
-                        isActive 
-                          ? 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 cursor-default' 
-                          : 'bg-[#2563EB] hover:bg-[#2563EB]/90 text-white'
-                      }`}
-                    >
-                      {isActive ? t.currentPlan : t.subscribe}
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </section>
 
         {/* Row 2: Alert rules */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

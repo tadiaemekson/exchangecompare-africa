@@ -40,6 +40,12 @@ interface Subscription {
   };
 }
 
+interface Plan {
+  id: number;
+  name: string;
+  price: number;
+}
+
 const navbarTranslations = {
   fr: {
     comparator: "Comparateur",
@@ -56,6 +62,12 @@ const navbarTranslations = {
     phone: "Téléphone",
     role: "Rôle",
     loggedOut: "Déconnexion réussie",
+    plansTitle: "Changer de Plan",
+    subscribe: "S'abonner",
+    activePlan: "Plan Actuel",
+    subUpdated: "Abonnement mis à jour !",
+    subUpdatedDesc: "Vous êtes maintenant abonné au plan ",
+    subUpdateFail: "Échec de la mise à jour de l'abonnement."
   },
   en: {
     comparator: "Comparator",
@@ -72,6 +84,12 @@ const navbarTranslations = {
     phone: "Phone",
     role: "Role",
     loggedOut: "Logged out successfully",
+    plansTitle: "Change Plan",
+    subscribe: "Subscribe",
+    activePlan: "Active Plan",
+    subUpdated: "Subscription updated!",
+    subUpdatedDesc: "You are now subscribed to the plan ",
+    subUpdateFail: "Failed to update subscription."
   }
 };
 
@@ -80,6 +98,8 @@ export default function Navbar({ currentLang, onChangeLanguage }: NavbarProps) {
   const location = useLocation();
   const [user, setUser] = useState<UserData | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loadingSub, setLoadingSub] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -93,21 +113,40 @@ export default function Navbar({ currentLang, onChangeLanguage }: NavbarProps) {
         const parsedUser = JSON.parse(userDataStr);
         setUser(parsedUser);
         
-        // Fetch subscription if logged in
-        api.get('/subscription')
-          .then(res => {
-            if (res.data) {
-              setSubscription(res.data);
+        // Fetch subscription and plans if logged in
+        Promise.all([
+          api.get('/subscription'),
+          api.get('/plans')
+        ])
+          .then(([subRes, plansRes]) => {
+            if (subRes.data) {
+              setSubscription(subRes.data);
+            }
+            if (plansRes.data) {
+              setPlans(plansRes.data);
             }
           })
           .catch(err => {
-            console.error("Error fetching subscription details", err);
+            console.error("Error fetching subscription or plans details", err);
           });
       } catch (e) {
         console.error("Error parsing user data", e);
       }
     }
   }, []);
+
+  const handleSubscribe = async (planId: number) => {
+    setLoadingSub(true);
+    try {
+      const res = await api.post('/subscribe', { plan_id: planId });
+      setSubscription(res.data);
+      toast.success(t.subUpdated, { description: `${t.subUpdatedDesc}${res.data.plan.name}` });
+    } catch (err) {
+      toast.error(t.subUpdateFail);
+    } finally {
+      setLoadingSub(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -234,22 +273,53 @@ export default function Navbar({ currentLang, onChangeLanguage }: NavbarProps) {
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{t.profile}</p>
                       <p className="font-extrabold text-sm text-slate-900 dark:text-white mt-0.5">{user.name}</p>
                       <p className="text-xs text-slate-450 dark:text-slate-400 truncate">{user.email}</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                        <CreditCard className="w-3.5 h-3.5 text-[#2563EB]" />
-                        <span className="font-semibold">{t.currentPlan}:</span>
-                        <span className="font-extrabold px-2 py-0.5 bg-[#2563EB]/10 text-[#2563EB] dark:bg-[#2563EB]/20 dark:text-blue-400 rounded-full">
-                          {subscription?.plan?.name || t.noPlan}
-                        </span>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-slate-650 dark:text-slate-350 mt-3">
+                          <CreditCard className="w-3.5 h-3.5 text-[#2563EB]" />
+                          <span className="font-semibold">{t.currentPlan}:</span>
+                          <span className="font-extrabold px-2 py-0.5 bg-[#2563EB]/10 text-[#2563EB] dark:bg-[#2563EB]/20 dark:text-blue-400 rounded-full">
+                            {subscription?.plan?.name || t.noPlan}
+                          </span>
+                        </div>
+                        
+                        {user.phone && (
+                          <div className="flex items-center gap-2 text-xs text-slate-650 dark:text-slate-350">
+                            <Phone className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="font-semibold">{t.phone}:</span>
+                            <span className="font-medium text-slate-900 dark:text-slate-100">{user.phone}</span>
+                          </div>
+                        )}
                       </div>
-                      
-                      {user.phone && (
-                        <div className="flex items-center gap-2 text-xs text-slate-650 dark:text-slate-350">
-                          <Phone className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="font-semibold">{t.phone}:</span>
-                          <span className="font-medium text-slate-900 dark:text-slate-100">{user.phone}</span>
+
+                      {/* Subscription plans list (Desktop) */}
+                      {plans.length > 0 && (
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/60 space-y-2 mt-2">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{t.plansTitle}</p>
+                          <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
+                            {plans.map((plan) => {
+                              const isActivePlan = subscription?.plan_id === plan.id;
+                              return (
+                                <div key={plan.id} className="flex items-center justify-between p-1.5 rounded-lg border border-slate-200/40 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30 text-xs">
+                                  <div className="truncate max-w-[130px]">
+                                    <span className="font-bold text-slate-850 dark:text-slate-200 block truncate">{plan.name}</span>
+                                    <span className="text-[9px] text-slate-400 font-medium block">{plan.price.toFixed(2)} $ / mo</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    disabled={isActivePlan || loadingSub}
+                                    onClick={() => handleSubscribe(plan.id)}
+                                    className={`text-[9px] font-extrabold px-2 py-0.5 rounded transition-all duration-150 ${
+                                      isActivePlan
+                                        ? 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-450 cursor-default'
+                                        : 'bg-[#2563EB] hover:bg-[#2563EB]/90 text-white shadow-xs'
+                                    }`}
+                                  >
+                                    {isActivePlan ? t.activePlan : t.subscribe}
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -387,6 +457,38 @@ export default function Navbar({ currentLang, onChangeLanguage }: NavbarProps) {
                         </span>
                       </div>
                     </div>
+
+                    {/* Subscription plans list (Mobile) */}
+                    {plans.length > 0 && (
+                      <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800/65 space-y-2">
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">{t.plansTitle}</span>
+                        <div className="grid grid-cols-1 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
+                          {plans.map((plan) => {
+                            const isActivePlan = subscription?.plan_id === plan.id;
+                            return (
+                              <div key={plan.id} className="flex items-center justify-between p-2 rounded-lg border border-slate-200/40 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30">
+                                <div>
+                                  <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">{plan.name}</span>
+                                  <span className="text-[9px] text-slate-400 font-medium block">{plan.price.toFixed(2)} $ / mo</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  disabled={isActivePlan || loadingSub}
+                                  onClick={() => handleSubscribe(plan.id)}
+                                  className={`text-[9px] font-extrabold px-2.5 py-1 rounded transition-all duration-150 ${
+                                    isActivePlan
+                                      ? 'bg-emerald-500/15 text-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-450 cursor-default'
+                                      : 'bg-[#2563EB] hover:bg-[#2563EB]/90 text-white shadow-xs'
+                                  }`}
+                                >
+                                  {isActivePlan ? t.activePlan : t.subscribe}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

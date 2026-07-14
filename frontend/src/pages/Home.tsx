@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { ArrowRightLeft, TrendingUp, Info, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { ArrowRightLeft, TrendingUp, Info } from 'lucide-react';
 import api from '@/services/api';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import Navbar from '@/components/Navbar';
 
 const translations = {
   fr: {
@@ -200,14 +200,12 @@ interface Currency {
 }
 
 export default function Home() {
-  const navigate = useNavigate();
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [amount, setAmount] = useState('100000');
   const [currencyFrom, setCurrencyFrom] = useState('XAF');
   const [currencyTo, setCurrencyTo] = useState('USD');
   const [results, setResults] = useState<ComparisonResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [selectedType, setSelectedType] = useState<string>('all');
   
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
@@ -255,12 +253,6 @@ export default function Home() {
         }
       })
       .catch(err => console.error("Erreur chargement devises", err));
-
-    // Get current user session
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
   }, []);
 
   const handleCompare = async (e: React.FormEvent) => {
@@ -429,80 +421,10 @@ export default function Home() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    setUser(null);
-    toast.success(lang === 'fr' ? 'Déconnexion réussie' : 'Logged out successfully');
-    navigate('/auth');
-  };
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       
-      {/* Navigation Header */}
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center">
-            <img src="/logo.png" alt="ExchangeCompare Africa Logo" className="h-11 w-auto object-contain bg-white rounded-md p-1 border border-slate-200/50" />
-          </Link>
-          
-          <nav className="flex items-center gap-4">
-            {/* Language toggle switcher */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200/50 dark:border-slate-700/50">
-              <button
-                type="button"
-                onClick={() => changeLanguage('fr')}
-                className={`text-[10px] px-2 py-1 rounded font-bold uppercase transition-all ${lang === 'fr' ? 'bg-white dark:bg-slate-900 text-[#2563EB] shadow-xs' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
-              >
-                FR
-              </button>
-              <button
-                type="button"
-                onClick={() => changeLanguage('en')}
-                className={`text-[10px] px-2 py-1 rounded font-bold uppercase transition-all ${lang === 'en' ? 'bg-white dark:bg-slate-900 text-[#2563EB] shadow-xs' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
-              >
-                EN
-              </button>
-            </div>
-
-            <Link to="/" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#2563EB]">
-              {t.comparator}
-            </Link>
-            {user && (
-              <Link to="/dashboard" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#2563EB] flex items-center gap-1">
-                <LayoutDashboard className="w-4 h-4" />
-                {t.dashboard}
-              </Link>
-            )}
-            {user && user.role === 'admin' && (
-              <Link to="/admin" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#2563EB] flex items-center gap-1">
-                <Settings className="w-4 h-4" />
-                {t.admin}
-              </Link>
-            )}
-            
-            <div className="border-l border-slate-200 dark:border-slate-800 h-6 mx-1" />
-            
-            {user ? (
-              <div className="flex items-center gap-3">
-                <span className="text-xs bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full text-slate-600 dark:text-slate-300 font-medium">
-                  {user.name}
-                </span>
-                <Button onClick={handleLogout} variant="ghost" size="sm" className="text-slate-500 hover:text-red-500 gap-1.5 h-8">
-                  <LogOut className="w-4 h-4" />
-                  {t.logout}
-                </Button>
-              </div>
-            ) : (
-              <Link to="/auth">
-                <Button className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white font-medium h-9 px-4 text-sm rounded-lg">
-                  {t.login}
-                </Button>
-              </Link>
-            )}
-          </nav>
-        </div>
-      </header>
+      <Navbar currentLang={lang} onChangeLanguage={changeLanguage} />
 
       {/* Main Body */}
       <main className="max-w-4xl mx-auto px-4 py-12 space-y-12">

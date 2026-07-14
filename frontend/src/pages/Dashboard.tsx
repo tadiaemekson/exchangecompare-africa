@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Bell, Plus, Trash2, ArrowLeft, CreditCard, History, LayoutDashboard, Check } from 'lucide-react';
+import { Bell, Plus, Trash2, CreditCard, History, Check } from 'lucide-react';
 import api from '@/services/api';
 import { toast } from 'sonner';
+import Navbar from '@/components/Navbar';
 
 interface Alert {
   id: number;
@@ -259,48 +259,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
       
-      {/* Header bar */}
-      <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors text-sm font-medium">
-            <ArrowLeft className="w-4 h-4" />
-            {t.backToComparator}
-          </Link>
-          <div className="flex items-center gap-2">
-            <LayoutDashboard className="w-5 h-5 text-[#2563EB]" />
-            <span className="font-extrabold text-base tracking-tight font-display">{t.userDashboard}</span>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Language switcher toggle */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200/50 dark:border-slate-700/50">
-              <button
-                type="button"
-                onClick={() => changeLanguage('fr')}
-                className={`text-[10px] px-2 py-1 rounded font-bold uppercase transition-all ${lang === 'fr' ? 'bg-white dark:bg-slate-900 text-[#2563EB] shadow-xs' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
-              >
-                FR
-              </button>
-              <button
-                type="button"
-                onClick={() => changeLanguage('en')}
-                className={`text-[10px] px-2 py-1 rounded font-bold uppercase transition-all ${lang === 'en' ? 'bg-white dark:bg-slate-900 text-[#2563EB] shadow-xs' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'}`}
-              >
-                EN
-              </button>
-            </div>
-
-            {subscription && (
-              <div className="flex items-center gap-1.5 border-l pl-4 border-slate-200 dark:border-slate-800">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t.myPlan}</span>
-                <span className="text-xs font-extrabold bg-[#2563EB]/10 text-[#2563EB] dark:bg-[#2563EB]/20 dark:text-blue-400 px-3 py-1 rounded-full border border-blue-200/20">
-                  {subscription.plan.name}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+      <Navbar currentLang={lang} onChangeLanguage={changeLanguage} />
 
       {/* Main Container */}
       <main className="max-w-6xl mx-auto px-4 py-10 space-y-8">

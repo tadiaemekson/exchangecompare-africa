@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { BarChart, Users, Globe, LogOut, Plus, Edit, Trash2, ArrowLeft, Landmark, RefreshCw, Layers } from 'lucide-react';
+import { BarChart, Users, LogOut, Plus, Edit, Trash2, ArrowLeft, Landmark, RefreshCw, Layers } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '@/services/api';
 import { toast } from 'sonner';

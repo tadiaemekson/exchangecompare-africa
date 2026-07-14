@@ -442,9 +442,8 @@ export default function Home() {
       {/* Navigation Header */}
       <header className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 font-display font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
-            <span className="text-[#2563EB] font-black text-2xl">EC</span>
-            ExchangeCompare<span className="text-[#10B981]">.africa</span>
+          <Link to="/" className="flex items-center">
+            <img src="/logo.png" alt="ExchangeCompare Africa Logo" className="h-11 w-auto object-contain bg-white rounded-md p-1 border border-slate-200/50" />
           </Link>
           
           <nav className="flex items-center gap-4">

@@ -47,6 +47,15 @@ class ConversionController extends Controller
 
         $user = auth('sanctum')->user();
 
+        $beneficiaryDetails = $request->beneficiary_details;
+        if (is_array($beneficiaryDetails)) {
+            array_walk_recursive($beneficiaryDetails, function (&$val) {
+                if (is_string($val)) {
+                    $val = strip_tags($val);
+                }
+            });
+        }
+
         $conversion = Conversion::create([
             'user_id' => $user ? $user->id : null,
             'amount' => $request->amount,
@@ -55,7 +64,7 @@ class ConversionController extends Controller
             'to_currency_id' => $request->to_currency_id,
             'converted_amount' => $request->converted_amount,
             'rate' => $request->rate,
-            'beneficiary_details' => $request->beneficiary_details,
+            'beneficiary_details' => $beneficiaryDetails,
         ]);
 
         return response()->json($conversion->load(['provider', 'currencyFrom', 'currencyTo']), 201);

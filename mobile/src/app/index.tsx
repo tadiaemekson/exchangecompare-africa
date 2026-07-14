@@ -11,6 +11,7 @@ import {
   StyleSheet,
   useColorScheme,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -151,10 +152,10 @@ export default function HomeFeedIndex() {
       
       {/* 1. App Header */}
       <View style={[styles.header, { borderBottomColor: isDark ? '#1E293B' : '#E2E8F0', backgroundColor: isDark ? '#070b16' : '#F8FAFC' }]}>
-        <Text style={[styles.logoText, { color: isDark ? '#ffffff' : '#0F172A' }]}>
-          EC <Text style={{ color: '#2563EB' }}>ExchangeCompare</Text>
-          <Text style={{ color: '#10B981' }}>.africa</Text>
-        </Text>
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={{ height: 32, width: 140, resizeMode: 'contain', backgroundColor: '#ffffff', borderRadius: 6, padding: 2 }}
+        />
         <View style={styles.headerRightActions}>
           <TouchableOpacity 
             style={styles.headerIconBtn}

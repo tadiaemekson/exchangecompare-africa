@@ -11,8 +11,8 @@ use App\Http\Controllers\ConversionController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\NotificationController;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
 // Public routes
 Route::get('/currencies', [CurrencyController::class, 'index']);

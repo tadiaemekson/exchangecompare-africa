@@ -175,7 +175,10 @@ export default function Auth() {
                 </button>
               </div>
             </div>
-            <CardTitle className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <div className="flex justify-center mb-4">
+              <img src="/logo.png" alt="ExchangeCompare Africa Logo" className="h-12 w-auto object-contain bg-white rounded-md p-1 border border-slate-200/50" />
+            </div>
+            <CardTitle className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white text-center">
               ExchangeCompare
             </CardTitle>
             <CardDescription className="text-slate-500">

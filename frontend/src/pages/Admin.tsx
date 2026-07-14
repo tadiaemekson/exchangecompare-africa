@@ -638,9 +638,8 @@ export default function AdminDashboard() {
       {/* Sidebar navigation */}
       <aside className="w-full md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
         <div className="p-6 border-b border-slate-200 dark:border-slate-800">
-          <Link to="/" className="font-display font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
-            <Globe className="text-[#2563EB]" />
-            {t.logoTitle}
+          <Link to="/" className="flex items-center justify-center">
+            <img src="/logo.png" alt="ExchangeCompare Africa Logo" className="h-10 w-auto object-contain bg-white rounded-md p-1 border border-slate-200/50" />
           </Link>
         </div>
         <nav className="flex-1 p-4 space-y-1">

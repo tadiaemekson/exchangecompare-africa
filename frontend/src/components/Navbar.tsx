@@ -12,7 +12,8 @@ import {
   CreditCard, 
   ChevronDown,
   ArrowRightLeft,
-  Globe
+  Globe,
+  Shield
 } from 'lucide-react';
 import api from '@/services/api';
 import { toast } from 'sonner';
@@ -289,6 +290,11 @@ export default function Navbar({ currentLang, onChangeLanguage }: NavbarProps) {
                             <span className="font-medium text-slate-900 dark:text-slate-100">{user.phone}</span>
                           </div>
                         )}
+                        <div className="flex items-center gap-2 text-xs text-slate-650 dark:text-slate-350">
+                          <Shield className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="font-semibold">{t.role}:</span>
+                          <span className="font-medium capitalize text-slate-900 dark:text-slate-100">{user.role}</span>
+                        </div>
                       </div>
 
                       {/* Subscription plans list (Desktop) */}
@@ -455,6 +461,14 @@ export default function Navbar({ currentLang, onChangeLanguage }: NavbarProps) {
                         <span className="font-extrabold inline-block mt-0.5 px-2.5 py-0.5 bg-[#2563EB]/15 text-[#2563EB] dark:bg-[#2563EB]/25 dark:text-blue-400 rounded-full text-[10px]">
                           {subscription?.plan?.name || t.noPlan}
                         </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <Shield className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                      <div>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">{t.role}</span>
+                        <span className="font-medium capitalize text-slate-800 dark:text-slate-200">{user.role}</span>
                       </div>
                     </div>
 

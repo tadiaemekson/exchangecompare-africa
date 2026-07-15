@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Bell, Plus, Trash2, History } from 'lucide-react';
+import { Bell, Plus, Trash2, History, MessageSquare, Send, Clock, CheckCircle2, Ban, RefreshCw } from 'lucide-react';
 import api from '@/services/api';
 import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Alert {
   id: number;
@@ -22,13 +23,23 @@ interface Alert {
   currencyTo?: { code: string };
 }
 
+interface ChatMessage {
+  sender_id: number;
+  sender_name: string;
+  sender_role: string;
+  message: string;
+  created_at: string;
+}
+
 interface Conversion {
   id: number;
   amount: number;
   converted_amount: number;
   rate: number;
   created_at: string;
-  provider: { name: string };
+  status?: 'pending' | 'processing' | 'completed' | 'cancelled';
+  chat_messages?: ChatMessage[] | null;
+  provider: { id: number; name: string; type?: string };
   currency_from?: { code: string };
   currency_to?: { code: string };
   currencyFrom?: { code: string };
@@ -157,12 +168,47 @@ export default function Dashboard() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [conversions, setConversions] = useState<Conversion[]>([]);
+  // Chat state
+  const [chatOpen, setChatOpen] = useState(false);
+  const [activeChatId, setActiveChatId] = useState<number | null>(null);
+  const [chatMsgText, setChatMsgText] = useState('');
+
   // Form state
   const [currencyFrom, setCurrencyFrom] = useState('');
   const [currencyTo, setCurrencyTo] = useState('');
   const [targetRate, setTargetRate] = useState('');
   const [condition, setCondition] = useState('above');
   const [lang, setLang] = useState<'fr' | 'en'>('fr');
+
+  useEffect(() => {
+    if (!chatOpen || !activeChatId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get('/conversions');
+        setConversions(res.data);
+      } catch (err) {
+        console.error("Error refreshing conversions status", err);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [chatOpen, activeChatId]);
+
+  const sendUserChatMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeChatId || !chatMsgText.trim()) return;
+
+    const currentMsg = chatMsgText;
+    setChatMsgText('');
+
+    try {
+      const res = await api.post(`/conversions/${activeChatId}/messages`, { message: currentMsg });
+      setConversions(prev => prev.map(c => c.id === activeChatId ? res.data : c));
+    } catch (err) {
+      toast.error("Impossible d'envoyer le message.");
+    }
+  };
 
   useEffect(() => {
     const savedLang = localStorage.getItem('lang');
@@ -375,6 +421,8 @@ export default function Dashboard() {
                     <TableHead>{t.tableAppliedRate}</TableHead>
                     <TableHead>{t.tableConvertedAmount}</TableHead>
                     <TableHead>{t.tableTransferDate}</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -396,6 +444,33 @@ export default function Dashboard() {
                         <TableCell className="text-xs text-slate-400">
                           {new Date(conv.created_at).toLocaleString()}
                         </TableCell>
+                        <TableCell>
+                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border inline-flex items-center gap-1 capitalize ${
+                            conv.status === 'pending' || !conv.status
+                              ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/30'
+                              : conv.status === 'processing'
+                              ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/30'
+                              : conv.status === 'completed'
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30'
+                              : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/30'
+                          }`}>
+                            {conv.status || 'pending'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {conv.provider.type === 'agent' && (
+                            <Button
+                              onClick={() => {
+                                setActiveChatId(conv.id);
+                                setChatOpen(true);
+                              }}
+                              className="bg-[#2563EB] hover:bg-[#2563EB]/90 text-white font-bold h-8 text-[10px] px-3 gap-1 rounded-lg"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                              Chat & Suivi
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
@@ -404,6 +479,98 @@ export default function Dashboard() {
             )}
           </Card>
         </section>
+
+        {/* P2P Chat & Track Dialog */}
+        <Dialog open={chatOpen} onOpenChange={setChatOpen}>
+          <DialogContent className="max-w-md w-full p-5 rounded-2xl bg-white dark:bg-slate-900 border dark:border-slate-800">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white font-display">
+                <MessageSquare className="text-[#2563EB]" />
+                Suivi de transfert P2P
+              </DialogTitle>
+            </DialogHeader>
+
+            {(() => {
+              const activeConv = conversions.find(c => c.id === activeChatId);
+              if (!activeConv) return null;
+              return (
+                <div className="space-y-4 mt-2">
+                  {/* Status Indicator */}
+                  <div className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Statut du transfert</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 capitalize">
+                        {activeConv.status || 'En attente'}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${
+                      activeConv.status === 'pending' || !activeConv.status
+                        ? 'bg-amber-100 text-amber-805 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/30'
+                        : activeConv.status === 'processing'
+                        ? 'bg-blue-105 text-blue-805 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900/30'
+                        : activeConv.status === 'completed'
+                        ? 'bg-emerald-100 text-emerald-805 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30'
+                        : 'bg-red-105 text-red-805 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/30'
+                    }`}>
+                      {activeConv.status === 'pending' || !activeConv.status ? <Clock className="w-3.5 h-3.5" /> : null}
+                      {activeConv.status === 'processing' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
+                      {activeConv.status === 'completed' ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
+                      {activeConv.status === 'cancelled' ? <Ban className="w-3.5 h-3.5" /> : null}
+                      {activeConv.status || 'pending'}
+                    </span>
+                  </div>
+
+                  {/* Chat window */}
+                  <div className="h-64 overflow-y-auto p-3.5 rounded-xl border border-slate-100 dark:border-slate-805 bg-slate-50/50 dark:bg-slate-950/20 space-y-3 flex flex-col">
+                    {activeConv.chat_messages && activeConv.chat_messages.length > 0 ? (
+                      activeConv.chat_messages.map((msg, index) => {
+                        const isMe = msg.sender_role === 'user';
+                        return (
+                          <div
+                            key={index}
+                            className={`flex flex-col max-w-[85%] ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`}
+                          >
+                            <span className="text-[9px] font-bold text-slate-400 mb-0.5">
+                              {msg.sender_name} ({msg.sender_role})
+                            </span>
+                            <div
+                              className={`p-3 rounded-2xl text-xs font-semibold ${
+                                isMe
+                                  ? 'bg-[#2563EB] text-white rounded-tr-none'
+                                  : 'bg-white dark:bg-slate-850 text-slate-800 dark:text-slate-200 border border-slate-100 dark:border-slate-805 shadow-2xs rounded-tl-none'
+                              }`}
+                            >
+                              {msg.message}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-center gap-1.5 py-12">
+                        <span className="text-2xl">💬</span>
+                        <p className="text-xs font-bold text-slate-500">Pas encore de messages.</p>
+                        <p className="text-[10px] text-slate-400 max-w-[200px]">Échangez ici avec l'agent pour valider votre virement ou poser des questions.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Text sender input */}
+                  <form onSubmit={sendUserChatMessage} className="flex gap-2">
+                    <Input
+                      value={chatMsgText}
+                      onChange={(e) => setChatMsgText(e.target.value)}
+                      placeholder="Posez votre question à l'agent P2P..."
+                      className="flex-1 text-xs h-9 bg-slate-50 dark:bg-slate-950 font-medium border-slate-200 dark:border-slate-800"
+                    />
+                    <Button type="submit" size="icon" className="w-9 h-9 bg-[#2563EB] hover:bg-[#2563EB]/90 text-white shrink-0">
+                      <Send className="w-3.5 h-3.5" />
+                    </Button>
+                  </form>
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
 
       </main>
     </div>

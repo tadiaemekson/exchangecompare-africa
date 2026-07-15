@@ -45,6 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Conversions routes
     Route::get('/conversions', [ConversionController::class, 'index']);
+    Route::get('/agent/conversions', [ConversionController::class, 'indexAgent']);
+    Route::put('/conversions/{id}/status', [ConversionController::class, 'updateStatus']);
+    Route::post('/conversions/{id}/messages', [ConversionController::class, 'sendMessage']);
 
     // Subscriptions routes
     Route::get('/plans', [SubscriptionController::class, 'getPlans']);

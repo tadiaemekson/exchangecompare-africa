@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,6 +82,8 @@ const translations = {
     copiedDirect: "Détails copiés ! Collez le message dans le groupe WhatsApp qui va s'ouvrir.",
     redirectingWa: "Demande enregistrée ! Redirection vers WhatsApp...",
     redirectingPlatform: "Demande enregistrée ! Redirection en cours...",
+    p2pSuccess: "Transfert direct P2P enregistré !",
+    p2pSuccessDesc: "Vous pouvez suivre le statut de votre transfert et discuter en direct avec l'agent depuis votre Tableau de bord.",
     
     // Footer
     footerRights: "© 2026 ExchangeCompare Africa. Tous droits réservés. Architecture API First.",
@@ -159,6 +162,8 @@ const translations = {
     copiedDirect: "Details copied! Paste the message in the WhatsApp group that will open.",
     redirectingWa: "Request saved! Redirecting to WhatsApp...",
     redirectingPlatform: "Request saved! Redirecting...",
+    p2pSuccess: "Direct P2P transfer registered!",
+    p2pSuccessDesc: "You can track your transfer status and chat live with the P2P agent from your Dashboard.",
     
     // Footer
     footerRights: "© 2026 ExchangeCompare Africa. All rights reserved. API First Architecture.",
@@ -200,6 +205,7 @@ interface Currency {
 }
 
 export default function Home() {
+  const navigate = useNavigate();
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [amount, setAmount] = useState('100000');
   const [currencyFrom, setCurrencyFrom] = useState('XAF');
@@ -343,6 +349,18 @@ export default function Home() {
         rate: selectedResult.buy_rate,
         beneficiary_details: beneficiaryForm
       });
+
+      // If the provider is a P2P agent, handle the session directly in-app
+      if (selectedResult.provider.type === 'agent') {
+        toast.success(t.p2pSuccess, {
+          description: t.p2pSuccessDesc,
+          duration: 6000
+        });
+        setBeneficiaryOpen(false);
+        setSubmittingBeneficiary(false);
+        navigate('/dashboard');
+        return;
+      }
 
       // Format details message for WhatsApp chat / group P2P (multilingual support)
       const formattedMsg = lang === 'fr'

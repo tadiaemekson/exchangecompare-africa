@@ -68,7 +68,8 @@ const navbarTranslations = {
     activePlan: "Plan Actuel",
     subUpdated: "Abonnement mis à jour !",
     subUpdatedDesc: "Vous êtes maintenant abonné au plan ",
-    subUpdateFail: "Échec de la mise à jour de l'abonnement."
+    subUpdateFail: "Échec de la mise à jour de l'abonnement.",
+    agentConsole: "Console Agent P2P"
   },
   en: {
     comparator: "Comparator",
@@ -90,7 +91,8 @@ const navbarTranslations = {
     activePlan: "Active Plan",
     subUpdated: "Subscription updated!",
     subUpdatedDesc: "You are now subscribed to the plan ",
-    subUpdateFail: "Failed to update subscription."
+    subUpdateFail: "Failed to update subscription.",
+    agentConsole: "P2P Agent Console"
   }
 };
 
@@ -215,6 +217,20 @@ export default function Navbar({ currentLang, onChangeLanguage }: NavbarProps) {
             >
               <Settings className="w-4 h-4" />
               {t.admin}
+            </Link>
+          )}
+
+          {user && user.role === 'agent' && (
+            <Link 
+              to="/agent" 
+              className={`text-sm font-semibold transition-colors duration-200 flex items-center gap-1.5 py-1 ${
+                isActive('/agent') 
+                  ? 'text-[#2563EB] border-b-2 border-[#2563EB]' 
+                  : 'text-slate-600 dark:text-slate-350 hover:text-[#2563EB] dark:hover:text-[#2563EB]'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              {t.agentConsole}
             </Link>
           )}
         </nav>
@@ -415,6 +431,21 @@ export default function Navbar({ currentLang, onChangeLanguage }: NavbarProps) {
               >
                 <Settings className="w-4 h-4" text-slate-500 />
                 {t.admin}
+              </Link>
+            )}
+
+            {user && user.role === 'agent' && (
+              <Link
+                to="/agent"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`text-sm font-bold flex items-center gap-2 py-2.5 px-3 rounded-lg transition-colors ${
+                  isActive('/agent') 
+                    ? 'bg-slate-50 dark:bg-slate-900 text-[#2563EB]' 
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50/50 dark:hover:bg-slate-900/50'
+                }`}
+              >
+                <Settings className="w-4 h-4" text-slate-500 />
+                {t.agentConsole}
               </Link>
             )}
           </div>

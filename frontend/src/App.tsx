@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Auth from './pages/Auth';
 import AdminDashboard from './pages/Admin';
 import Dashboard from './pages/Dashboard';
+import AgentConsole from './pages/Agent';
 import { Toaster } from '@/components/ui/sonner';
 import './index.css';
 
@@ -15,6 +16,7 @@ function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/agent" element={<AgentConsole />} />
         </Routes>
         <Toaster />
       </div>

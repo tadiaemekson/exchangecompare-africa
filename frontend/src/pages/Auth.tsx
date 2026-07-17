@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Lock, Mail, Phone, Shield } from 'lucide-react';
+import { User, Lock, Mail, Phone } from 'lucide-react';
 import api from '@/services/api';
 import { toast } from 'sonner';
 
@@ -151,12 +151,7 @@ export default function Auth() {
       <Card className="w-full max-w-md shadow-xl border border-slate-200/50 dark:border-slate-800/50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md relative z-10">
         <Tabs defaultValue="login" className="w-full">
           <CardHeader className="text-center pb-2">
-            <div className="flex justify-between items-center mb-3">
-              <div className="w-10"></div> {/* Spacer */}
-              <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center">
-                <Shield className="w-6 h-6" />
-              </div>
-              
+            <div className="flex justify-end items-center mb-3">
               {/* Mini Language Switcher */}
               <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200/50 dark:border-slate-700/50">
                 <button
@@ -178,12 +173,6 @@ export default function Auth() {
             <div className="flex justify-center mb-4">
               <img src="/logo.png" alt="ExchangeCompare Africa Logo" className="h-12 w-auto object-contain bg-white rounded-md p-1 border border-slate-200/50" />
             </div>
-            <CardTitle className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white text-center">
-              ExchangeCompare
-            </CardTitle>
-            <CardDescription className="text-slate-500">
-              {t.subtitle}
-            </CardDescription>
             <TabsList className="grid w-full grid-cols-2 mt-6 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
               <TabsTrigger value="login" className="rounded-md">{t.loginTab}</TabsTrigger>
               <TabsTrigger value="register" className="rounded-md">{t.registerTab}</TabsTrigger>
